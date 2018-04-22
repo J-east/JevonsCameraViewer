@@ -6,3 +6,6 @@ Hi, I made this app for viewing multiple cameras I have set up on an SMT Assembl
 It features exposure lock and various filter and rotation adjustments.
 
 It uses the AForge.net and EmguCV nuget packages for obtaining the USB video streams and conducting machine vision processing. Multiple instances can be run to view more than 2 USB streams
+
+[![Overview](http://img.youtube.com/vi/Mp8Z6vDXkm8/0.jpg)](http://www.youtube.com/watch?v=Mp8Z6vDXkm8 "Camera Viewer")
+
