@@ -214,6 +214,14 @@ namespace CameraViewer {
             return alphaimg.Bitmap ?? frame;
         }
 
+
+        /// <summary>
+        /// note: portions of code below were taken from https://www.codeproject.com/Articles/1192205/Capturing-motion-from-video-using-the-Emgu-CV-libr
+        /// author: Markus Koppensteiner
+        /// any code taken from codeproject is licenced under "The Code Project Open License (CPOL) 1.02"
+        /// this code is licenced under apache and may be redistributed
+        /// </summary>
+
         // emgu code
         Mat matframe;
         Mat prev_frame;
@@ -476,6 +484,12 @@ namespace CameraViewer {
 
             return blackDst.ToImage<Bgr, Byte>();
         }
+
+        /// <summary>
+        /// end note: portions of code taken from https://www.codeproject.com/Articles/1192205/Capturing-motion-from-video-using-the-Emgu-CV-libr
+        /// author: Markus Koppensteiner
+        /// any code taken from codeproject is licenced under "The Code Project Open License (CPOL) 1.02"
+        /// </summary>
 
         private static double GetDistance(double x1, double y1, double x2, double y2) {
             return Math.Sqrt(Math.Pow((x2 - x1), 2) + Math.Pow((y2 - y1), 2));
