@@ -11,11 +11,13 @@ using System.Threading;
 
 namespace CameraViewer {
     public partial class MainForm : Form {
-        Camera Camera1;
-        Camera Camera2;
+        Camera Camera1 { get; set; }
+        Camera Camera2 { get; set; }
 
         ContextMenu cm0;
         ContextMenu cm1;
+
+        Eyetracking eyeTracker = new Eyetracking();
         public MainForm() {
             InitializeComponent();
 
@@ -28,6 +30,28 @@ namespace CameraViewer {
             var item1 = cm1.MenuItems.Add("Make Full Screen");
             protectedPictureBox1.ContextMenu = cm1;
             item1.Click += new EventHandler(Cam1MakeFullScreen);
+
+            protectedPictureBox1.SendToBack();
+            protectedPictureBox0.SendToBack();
+
+            // Set KeyPreview object to true to allow the form to process 
+            // the key before the control with focus processes it.
+            this.KeyPreview = true;
+
+            // Associate the event-handling method with the
+            // KeyDown event.
+            this.KeyDown += new KeyEventHandler(MainForm_KeyDown);
+        }
+
+        // press any key to continue
+        private void MainForm_KeyDown(object sender, KeyEventArgs e) {
+            try {
+                eyeTracker.RecordCalibrationPoint();
+                e.Handled = true;
+                cameraAdjustments1.BeginInvoke((MethodInvoker)delegate (){ cameraAdjustments1.UpdateEyeTracking();});
+                cameraAdjustments2.BeginInvoke((MethodInvoker)delegate () { cameraAdjustments2.UpdateEyeTracking(); });
+            }
+            catch { } // do nothing 
         }
 
         Size cam0OriginalSize;
@@ -36,14 +60,17 @@ namespace CameraViewer {
         private void Cam0MakeFullScreen(object sender, EventArgs e) {
             if (cam0IsFullScreen) {                
                 this.protectedPictureBox0.Size = cam0OriginalSize;
+                this.VerticalScroll.Value = 0;
+                Application.DoEvents();
                 this.protectedPictureBox0.Location = cam0OriginalLocation;
                 cam0IsFullScreen = false;
                 cm0.MenuItems[0].Text = "Make Full Screen";
                 Camera1.isFullScreenMode = false;
+                protectedPictureBox0.SendToBack();
             }
             else {
                 cam0OriginalSize = this.protectedPictureBox0.Size;
-                cam0OriginalLocation = this.protectedPictureBox0.Location;
+                cam0OriginalLocation = new System.Drawing.Point(515, 0);
                 Size maxSize = this.Size;
                 this.protectedPictureBox0.Size = maxSize;
                 this.protectedPictureBox0.Location = new Point(0, 0);
@@ -51,7 +78,7 @@ namespace CameraViewer {
                 cam0IsFullScreen = true;
                 cm0.MenuItems[0].Text = "Make Normal Size";
                 Camera1.isFullScreenMode = true;
-                Camera1.fullscreenSize = maxSize;
+                Camera1.fullscreenSize = maxSize;                                
             }
         }
 
@@ -61,13 +88,16 @@ namespace CameraViewer {
         private void Cam1MakeFullScreen(object sender, EventArgs e) {
             if (cam1IsFullScreen) {
                 this.protectedPictureBox1.Size = cam1OriginalSize;
+                this.VerticalScroll.Value = 0;
+                Application.DoEvents();
                 this.protectedPictureBox1.Location = cam1OriginalLocation;
                 cam1IsFullScreen = false;
                 cm1.MenuItems[0].Text = "Make Full Screen";
                 Camera2.isFullScreenMode = false;
+                protectedPictureBox1.SendToBack();
             }
             else {
-                cam1OriginalLocation = this.protectedPictureBox1.Location;
+                cam1OriginalLocation = new System.Drawing.Point(515, 720);
                 cam1OriginalSize = this.protectedPictureBox1.Size;
                 Size maxSize = this.Size;
                 this.protectedPictureBox1.Size = maxSize;
@@ -80,111 +110,13 @@ namespace CameraViewer {
             }
         }
 
-        // =================================================================================
-        // get the devices         
-        private void getXCamList() {
-            List<string> Devices = Camera1.GetDeviceList();
-            XCam_comboBox.Items.Clear();
-            if (Devices.Count != 0) {
-                for (int i = 0; i < Devices.Count; i++) {
-                    XCam_comboBox.Items.Add(i.ToString() + ": " + Devices[i]);
-                }
-            }
-            else {
-                XCam_comboBox.Items.Add("----");
-                XCamStatus_label.Text = "No Cam";
-            }
-            if (
-                (Devices.Count > Program.Settings.Cam1.CamIndex) && (Program.Settings.Cam1.CamIndex > 0)) {
-                XCam_comboBox.SelectedIndex = Program.Settings.Cam1.CamIndex;
-            }
-            else {
-                XCam_comboBox.SelectedIndex = 0;  // default to first
-            }            
-        }
-
-        // =================================================================================
-        // get the devices         
-        private void getYCamList() {
-            List<string> Devices = Camera2.GetDeviceList();
-            YCam_comboBox.Items.Clear();
-            if (Devices.Count != 0) {
-                for (int i = 0; i < Devices.Count; i++) {
-                    YCam_comboBox.Items.Add(i.ToString() + ": " + Devices[i]);
-                }
-            }
-            else {
-                YCam_comboBox.Items.Add("----");
-                XCamStatus_label.Text = "No Cam";
-            }
-            if (
-                (Devices.Count > Program.Settings.Cam2.CamIndex) && (Program.Settings.Cam2.CamIndex > 0)) {
-                YCam_comboBox.SelectedIndex = Program.Settings.Cam2.CamIndex;
-            }
-            else {
-                YCam_comboBox.SelectedIndex = 0;  // default to first
-            }
-        }
-
-        private void xCamSelect_Click(object sender, EventArgs e) {
-            Program.Settings.Cam1.CamIndex = XCam_comboBox.SelectedIndex;
-
-            while (Camera1.Active) {
-                Camera1.SignalToStop();
-                Thread.Sleep(50);
-                Camera1.Active = false;
-            }
-
-            List <string> Monikers = Camera1.GetMonikerStrings();
-            Program.Settings.Cam1.CamMoniker = Monikers[XCam_comboBox.SelectedIndex];
-            AppSettings<Program.MySettings>.Save(Program.Settings);
-
-            Camera1.MonikerString = Monikers[XCam_comboBox.SelectedIndex];
-
-            Camera1.Active = true;
-
-            Camera1.BuildOutFunctionsList();
-            Camera1.Start("DownCamera", Program.Settings.Cam1.CamMoniker);
-
-            if (!Camera1.ReceivingFrames) {
-                MessageBox.Show("Camera being used by another process");
-            }
-        }
-
-        private void YCamSelect_Click(object sender, EventArgs e) {
-            Program.Settings.Cam2.CamIndex = YCam_comboBox.SelectedIndex;
-
-            while (Camera2.Active) {
-                Camera2.SignalToStop();
-                Thread.Sleep(50);
-                Camera2.Active = false;
-            }
-
-            List<string> Monikers = Camera2.GetMonikerStrings();
-            Program.Settings.Cam2.CamMoniker = Monikers[YCam_comboBox.SelectedIndex];
-            AppSettings<Program.MySettings>.Save(Program.Settings);
-
-            Camera2.MonikerString = Monikers[YCam_comboBox.SelectedIndex];
-
-            Camera2.Active = true;
-
-            Camera2.BuildOutFunctionsList();
-            Camera2.Start("UpCamera", Program.Settings.Cam2.CamMoniker);
-
-            Thread.Sleep(100);
-
-            if (!Camera2.ReceivingFrames) {
-                MessageBox.Show("Camera being used by another process");
-            }
-        }
-
         private void MainForm_Load(object sender, EventArgs e) {
 
-            Camera1 = new Camera(this);
-            Camera2 = new Camera(this);
+            Camera1 = new Camera(this, cameraAdjustments1, eyeTracker);
+            Camera2 = new Camera(this, cameraAdjustments1, eyeTracker);
 
-            getXCamList();
-            getYCamList();
+            eyeTracker.tempCam1 = Camera1;
+            eyeTracker.tempCam2 = Camera2;
 
             Camera1.ImageBox = protectedPictureBox0;
             Camera2.ImageBox = protectedPictureBox1;

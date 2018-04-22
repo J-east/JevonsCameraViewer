@@ -32,6 +32,9 @@ namespace CameraViewer {
                 public int GridSpacing = 20;
                 public int CamIndex = 1;
                 public bool grayScale = false;
+                public bool R = false;
+                public bool G = false;
+                public bool B = false;
                 public bool Invert = false;
                 public bool EdgeDetect = false;
                 public int EdgeDetectVal = 1;

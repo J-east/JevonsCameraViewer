@@ -8,19 +8,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using DirectShowLib;
+using System.Threading;
 
 namespace CameraViewer {
     public partial class CameraAdjustments : UserControl {
         public Camera camera;
         bool xCamera = false;
 
+        bool isLoaded = false;
         public CameraAdjustments() {
             InitializeComponent();
+            isLoaded = true;
         }
 
         public void InitializeVariables(Camera thisCamera, bool xcamera) {
             camera = thisCamera;
             xCamera = xcamera;
+
+            GetCamList();
 
             if (xCamera) {
                 cbRotate.Checked = Program.Settings.Cam1.CamRotate;
@@ -39,7 +45,7 @@ namespace CameraViewer {
                 cbNoiseReduce.SelectedIndex = Program.Settings.Cam1.NoiseReductionVal;
                 nThreashold.Value = Program.Settings.Cam1.ThresholdVal;
                 nZoom.Value = Program.Settings.Cam1.ZoomVal;
-                lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam1.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam1.SaveLocation.Length < 24 ? 0 : Program.Settings.Cam1.SaveLocation.Length - 24);
+                lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam1.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam1.SaveLocation.Length < 50 ? 0 : Program.Settings.Cam1.SaveLocation.Length - 50);
             }
             else {
                 cbRotate.Checked = Program.Settings.Cam2.CamRotate;
@@ -59,7 +65,81 @@ namespace CameraViewer {
                 nThreashold.Value = Program.Settings.Cam2.ThresholdVal;
                 nZoom.Value = Program.Settings.Cam2.ZoomVal;
 
-                lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam2.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam2.SaveLocation.Length < 24 ? 0 : Program.Settings.Cam2.SaveLocation.Length - 24);
+                lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam2.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam2.SaveLocation.Length < 50 ? 0 : Program.Settings.Cam2.SaveLocation.Length - 50);
+            }
+        }
+
+        internal void UpdateEyeTracking() {
+            if (camera.eyeTracker.recordingPoints) {
+                lblInitializeStatus.Text = $"point {camera.eyeTracker.xCal + 1 * camera.eyeTracker.yCal + 1} of {Eyetracking.maxSize}";
+            }
+            else {
+                lblInitializeStatus.Text = $"Eye tracking initialized";
+            }
+
+            lblEyeTrackingInfo.Text = $"x = {camera.eyeTracker.TrackedXVal}  y = {camera.eyeTracker.TrackedYVal}";
+        }
+
+        // =================================================================================
+        // get the devices         
+        private void GetCamList() {
+            List<string> Devices = camera.GetDeviceList();
+            XCam_comboBox.Items.Clear();
+            if (Devices.Count != 0) {
+                for (int i = 0; i < Devices.Count; i++) {
+                    XCam_comboBox.Items.Add(i.ToString() + ": " + Devices[i]);
+                }
+            }
+            else {
+                XCam_comboBox.Items.Add("----");
+                XCamStatus_label.Text = "No Cam";
+            }
+            if (xCamera) {
+                if ((Devices.Count > Program.Settings.Cam1.CamIndex) && (Program.Settings.Cam1.CamIndex > 0)) {
+                    XCam_comboBox.SelectedIndex = Program.Settings.Cam1.CamIndex;
+                }
+                else {
+                    XCam_comboBox.SelectedIndex = 0;  
+                }
+            }
+            else {
+                if ((Devices.Count > Program.Settings.Cam2.CamIndex) && (Program.Settings.Cam2.CamIndex > 0)) {
+                    XCam_comboBox.SelectedIndex = Program.Settings.Cam2.CamIndex;
+                }
+                else {
+                    XCam_comboBox.SelectedIndex = 0;  
+                }
+            }
+        }
+
+        private void xCamSelect_Click(object sender, EventArgs e) {
+            Program.Settings.Cam1.CamIndex = XCam_comboBox.SelectedIndex;
+
+            while (camera.Active) {
+                camera.SignalToStop();
+                Thread.Sleep(50);
+                camera.Active = false;
+            }
+
+
+            List<string> Monikers = camera.GetMonikerStrings();
+            if (xCamera) {
+                Program.Settings.Cam1.CamMoniker = Monikers[XCam_comboBox.SelectedIndex];
+                AppSettings<Program.MySettings>.Save(Program.Settings);
+            }
+            else {
+                Program.Settings.Cam2.CamMoniker = Monikers[XCam_comboBox.SelectedIndex];
+                AppSettings<Program.MySettings>.Save(Program.Settings);
+            }
+
+            camera.MonikerString = Monikers[XCam_comboBox.SelectedIndex];
+
+            camera.Active = true;
+
+            camera.Start("DownCamera", Monikers[XCam_comboBox.SelectedIndex]);
+
+            if (!camera.ReceivingFrames) {
+                MessageBox.Show("Camera being used by another process");
             }
         }
 
@@ -104,7 +184,6 @@ namespace CameraViewer {
         private void cbGrayscale_CheckedChanged(object sender, EventArgs e) {
             try {
                 camera.GrayScale = cbGrayscale.Checked;
-                camera.BuildOutFunctionsList();
             }
             catch { }
             if (xCamera)
@@ -117,7 +196,6 @@ namespace CameraViewer {
         private void cbInvert_CheckedChanged(object sender, EventArgs e) {
             try {
                 camera.Invert = cbInvert.Checked;
-                camera.BuildOutFunctionsList();
             }
             catch { }
             if (xCamera)
@@ -130,7 +208,6 @@ namespace CameraViewer {
         private void cbEdgeDetect_CheckedChanged(object sender, EventArgs e) {
             try {
                 camera.EdgeDetect = cbEdgeDetect.Checked;
-                camera.BuildOutFunctionsList();
             }
             catch { }
             if (xCamera)
@@ -143,7 +220,6 @@ namespace CameraViewer {
         private void cbNoiseReduction_CheckedChanged(object sender, EventArgs e) {
             try {
                 camera.NoiseReduce = cbNoiseReduction.Checked;
-                camera.BuildOutFunctionsList();
             }
             catch { }
             if (xCamera)
@@ -156,7 +232,6 @@ namespace CameraViewer {
         private void cbThreashold_CheckedChanged(object sender, EventArgs e) {
             try {
                 camera.Threshold = cbThreashold.Checked;
-                camera.BuildOutFunctionsList();
             }
             catch { }
             if (xCamera)
@@ -169,7 +244,6 @@ namespace CameraViewer {
         private void cbContrast_CheckedChanged(object sender, EventArgs e) {
             try {
                 camera.Contrast = cbContrast.Checked;
-                camera.BuildOutFunctionsList();
             }
             catch { }
             if (xCamera)
@@ -182,7 +256,6 @@ namespace CameraViewer {
         private void cbZoom_CheckedChanged(object sender, EventArgs e) {
             try {
                 camera.Zoom = cbZoom.Checked;
-                camera.BuildOutFunctionsList();
             }
             catch { }
             if (xCamera)
@@ -252,15 +325,238 @@ namespace CameraViewer {
                 if (!string.IsNullOrWhiteSpace(directoryDialog.FileName)) {
                     if (xCamera) {
                         Program.Settings.Cam1.SaveLocation = directoryDialog.FileName;
-                        lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam1.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam1.SaveLocation.Length < 24 ? 0 : Program.Settings.Cam1.SaveLocation.Length - 24);
+                        lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam1.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam1.SaveLocation.Length < 50 ? 0 : Program.Settings.Cam1.SaveLocation.Length - 50);
                     }
                     else {
                         Program.Settings.Cam2.SaveLocation = directoryDialog.FileName;
-                        lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam2.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam2.SaveLocation.Length < 24 ? 0 : Program.Settings.Cam2.SaveLocation.Length - 24);
+                        lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam2.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam2.SaveLocation.Length < 50 ? 0 : Program.Settings.Cam2.SaveLocation.Length - 50);
                     }
 
                     AppSettings<Program.MySettings>.Save(Program.Settings);
                 }
+            }
+            catch { }
+        }
+
+
+        private void cbLockExposure_CheckedChanged(object sender, EventArgs e) {
+            if (!camera.Active) {
+                return;
+            }
+
+            if (!isLoaded) {
+                return;
+            }
+
+            if (cbLockExposure.Checked) {
+                int g = 0;
+                AForge.Video.DirectShow.CameraControlFlags controlFlags;
+                // max -9 min 0
+                camera.VideoSource.GetCameraProperty(AForge.Video.DirectShow.CameraControlProperty.Exposure, out g, out controlFlags);
+                camera.VideoSource.SetCameraProperty(AForge.Video.DirectShow.CameraControlProperty.Exposure, g, AForge.Video.DirectShow.CameraControlFlags.Manual);
+                camera.VideoSource.GetCameraProperty(AForge.Video.DirectShow.CameraControlProperty.Exposure, out g, out controlFlags);
+                trackBarExposure.Value = g * -1 + 1;
+                trackBarExposure.Visible = true;
+            }
+            else {
+                camera.VideoSource.SetCameraProperty(AForge.Video.DirectShow.CameraControlProperty.Exposure, 10, AForge.Video.DirectShow.CameraControlFlags.Auto);
+                trackBarExposure.Visible = false;
+            }
+        }
+
+        private void trackBarExposure_Scroll(object sender, EventArgs e) {
+            if (!isLoaded) {
+                return;
+            }
+            camera.VideoSource.SetCameraProperty(AForge.Video.DirectShow.CameraControlProperty.Exposure, (trackBarExposure.Value - 1) * -1, AForge.Video.DirectShow.CameraControlFlags.Manual);
+        }
+
+        private void trackBar1_Scroll(object sender, EventArgs e) {
+            camera.targetFramesSecond = trackBar1.Value;
+            lblFrameRate.Text = $"Framerate tuning: {camera.targetFramesSecond}";
+        }
+
+        private void cbLineDetection_CheckedChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.calcLines = cbLineDetection.Checked;
+        }
+
+        private void cbCircleDetection_CheckedChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.calcCircles = cbCircleDetection.Checked;
+        }
+
+        private void cbRectangleTriDetection_CheckedChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.calcRectTri = cbRectangleTriDetection.Checked;
+        }
+
+        private void nlineCanny_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.lineCannyThreshold = (double)nlineCanny.Value;
+        }
+
+        private void nLineThreashold_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.lineThreshold = (int)nLineThreashold.Value;
+        }
+
+        private void nThresholdLinking_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.cannyThresholdLinking = (double)nThresholdLinking.Value;
+        }
+
+        private void nMinLineWidth_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.minLineWidth = (double)nMinLineWidth.Value;
+        }
+
+        private void nMinRadius_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.minradius = (int)nMinRadius.Value;
+        }
+
+        private void nMaxRadius_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.maxRadius = (int)nMaxRadius.Value;
+        }
+
+        private void nCircleCanny_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.circleCannyThreshold = (int)nCircleCanny.Value;
+        }
+
+        private void nCircleAccumulator_ValueChanged(object sender, EventArgs e) {
+            camera.ShapeVariables.circleAccumulatorThreshold = (int)nCircleAccumulator.Value;
+        }
+
+        private void cbVisualFlow_CheckedChanged(object sender, EventArgs e) {
+            camera.optiVariables.calcOpticalFlow = cbVisualFlow.Checked;
+        }
+
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e) {
+            camera.optiVariables.stepRate = (int)nFlowDensity.Value;
+        }
+
+        private void numericUpDown2_ValueChanged(object sender, EventArgs e) {
+            camera.optiVariables.frameReduction = (int)((int)nResolutionReduction.Value % 2 == 1 ? nResolutionReduction.Value - 1 : nResolutionReduction.Value);
+        }
+
+        private void numericUpDown1_ValueChanged_1(object sender, EventArgs e) {
+            camera.optiVariables.shiftThatCounts = (int)numericUpDown1.Value;
+        }
+
+        private void cbEyeTracking_CheckedChanged(object sender, EventArgs e) {
+
+        }
+
+        // start the initialization
+        private void bInitialize_Click(object sender, EventArgs e) {
+            if (!camera.eyeTracker.Initialize()) {
+                MessageBox.Show("please set eye tracking camera");
+                return;
+            }
+
+        }
+
+        private void cbIsEyeCam_CheckedChanged(object sender, EventArgs e) {
+            camera.eyeTracker.SetCameraPosition(camera);
+        }
+
+        private void bReset_Click(object sender, EventArgs e) {
+            camera.eyeTracker.Initialize(true);
+        }
+
+        private void cbR_CheckedChanged(object sender, EventArgs e) {
+            try {
+                camera.R = cbR.Checked;
+            }
+            catch { }
+            if (xCamera)
+                Program.Settings.Cam1.R = cbR.Checked;
+            else
+                Program.Settings.Cam2.R = cbR.Checked;
+            AppSettings<Program.MySettings>.Save(Program.Settings);
+        }
+
+        private void cbG_CheckedChanged(object sender, EventArgs e) {
+            try {
+                camera.G = cbG.Checked;
+            }
+            catch { }
+            if (xCamera)
+                Program.Settings.Cam1.G = cbG.Checked;
+            else
+                Program.Settings.Cam2.G = cbG.Checked;
+            AppSettings<Program.MySettings>.Save(Program.Settings);
+        }
+
+        private void cbB_CheckedChanged(object sender, EventArgs e) {
+            try {
+                camera.B = cbB.Checked;
+            }
+            catch { }
+            if (xCamera)
+                Program.Settings.Cam1.B = cbB.Checked;
+            else
+                Program.Settings.Cam2.B = cbB.Checked;
+            AppSettings<Program.MySettings>.Save(Program.Settings);
+        }
+
+        private void XCam_comboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            if (xCamera) {
+                Program.Settings.Cam1.CamIndex = XCam_comboBox.SelectedIndex;
+                AppSettings<Program.MySettings>.Save(Program.Settings);
+            }
+            else {
+                Program.Settings.Cam2.CamIndex = XCam_comboBox.SelectedIndex;
+                AppSettings<Program.MySettings>.Save(Program.Settings);
+            }
+
+        }
+
+        private void tbEyeRectX_KeyPress(object sender, KeyPressEventArgs e) {
+            if (!(Char.IsDigit(e.KeyChar) || (e.KeyChar == (char)Keys.Back)))
+                e.Handled = true;
+        }
+
+        private void tbEyeRectY_KeyPress(object sender, KeyPressEventArgs e) {
+            if (!(Char.IsDigit(e.KeyChar) || (e.KeyChar == (char)Keys.Back)))
+                e.Handled = true;
+        }
+
+        private void tbEyeSX_KeyPress(object sender, KeyPressEventArgs e) {
+            if (!(Char.IsDigit(e.KeyChar) || (e.KeyChar == (char)Keys.Back)))
+                e.Handled = true;
+        }
+
+        private void tbEyeSY_KeyPress(object sender, KeyPressEventArgs e) {
+            if (!(Char.IsDigit(e.KeyChar) || (e.KeyChar == (char)Keys.Back)))
+                e.Handled = true;
+        }
+
+        private void nEyeTrackingTuningX_ValueChanged(object sender, EventArgs e) {
+            camera.eyeTracker.xTune = (int)nEyeTrackingTuningX.Value;
+        }
+
+        private void nEyeTrackingTuningY_ValueChanged(object sender, EventArgs e) {
+            camera.eyeTracker.yTune = (int)nEyeTrackingTuningY.Value;
+        }
+
+        private void tbEyeRectX_TextChanged(object sender, EventArgs e) {
+            try {
+                camera.eyeTracker.rectX = int.Parse(tbEyeRectX.Text);
+            }
+            catch { }
+        }
+
+        private void tbEyeRectY_TextChanged(object sender, EventArgs e) {
+            try {
+                camera.eyeTracker.rectY = int.Parse(tbEyeRectY.Text);
+            }
+            catch { }
+        }
+
+        private void tbEyeSX_TextChanged(object sender, EventArgs e) {
+            try {
+                camera.eyeTracker.rectHeight = int.Parse(tbEyeSX.Text);
+            }
+            catch { }
+        }
+
+        private void tbEyeSY_TextChanged(object sender, EventArgs e) {
+            try {
+                camera.eyeTracker.rectWidth = int.Parse(tbEyeSY.Text);
             }
             catch { }
         }

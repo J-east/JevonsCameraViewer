@@ -15,11 +15,22 @@ using AForge.Imaging;
 using AForge.Imaging.Filters;
 using AForge.Math.Geometry;
 using System.Threading.Tasks;
+using DirectShowLib;
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
+using Emgu.Util;
+using Emgu.CV.Cuda;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace CameraViewer {
     public class Camera {
-        private VideoCaptureDevice VideoSource = null;
+        public VideoCaptureDevice VideoSource = null;
         private MainForm MainForm;
+        private CameraAdjustments cameraAdjustments;
+        OpenCVMethods openCVMethods = new OpenCVMethods();
 
         public bool isFullScreenMode = false;
         public Size fullscreenSize = new Size(1920, 1080);
@@ -27,8 +38,22 @@ namespace CameraViewer {
         public bool rotateCam = false;
         public int rotateAmount = 1;
 
-        public Camera(MainForm MainF) {
+        public ShapeDetectionVariables ShapeVariables = new ShapeDetectionVariables();
+        public OpticalFlowVariable optiVariables = new OpticalFlowVariable();
+
+        public Eyetracking eyeTracker;
+
+        public bool isEyeCamera { get; set; } = false;
+
+        public Camera(MainForm MainF, CameraAdjustments cameraAdj) {
             MainForm = MainF;
+            cameraAdjustments = cameraAdj;
+        }
+
+        public Camera(MainForm MainF, CameraAdjustments cameraAdj, Eyetracking eyeTracker) {
+            MainForm = MainF;
+            cameraAdjustments = cameraAdj;
+            this.eyeTracker = eyeTracker;
         }
 
         public bool Active { get; set; }
@@ -54,19 +79,22 @@ namespace CameraViewer {
 
         public void DisplayPropertyPage() {
             VideoSource.DisplayPropertyPage(IntPtr.Zero);
-
         }
-
 
         public class ProtectedPictureBox : System.Windows.Forms.PictureBox {
             protected override void OnPaint(PaintEventArgs e) {
-                lock (_locker) {
-                    base.OnPaint(e);
+                try {
+                    lock (_locker) {
+                        try {
+                            base.OnPaint(e);
+                        }
+                        catch { }
+                    }
                 }
+                catch { }
             }
         }
 
-        // _locker must be a static Camera class variable to be available to the overridden OnPaint method
         private static object _locker = new object();
 
         ProtectedPictureBox _imageBox;
@@ -81,22 +109,22 @@ namespace CameraViewer {
             }
         }
 
-        public int FrameCenterX { get; set; }
-        public int FrameCenterY { get; set; }
-        public int FrameSizeX { get; set; }
-        public int FrameSizeY { get; set; }
+        public int ImgCenterX { get; set; }
+        public int ImgCenterY { get; set; }
+        public int ImgSizeX { get; set; }
+        public int ImgSizeY { get; set; }
 
         public string MonikerString = "unconnected";
 
         public bool ReceivingFrames { get; set; }
 
+        public IAMVideoProcAmp cameraControls;
         public bool Start(string cam, string MonikerStr) {
             try {
                 // enumerate video devices
-                FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+                FilterInfoCollection videoDevices = new FilterInfoCollection(AForge.Video.DirectShow.FilterCategory.VideoInputDevice);
                 // create the video source (check that the camera exists is already done
                 VideoSource = new VideoCaptureDevice(MonikerStr);
-
 
                 VideoSource.VideoResolution = VideoSource.VideoCapabilities[17];
                 VideoSource.NewFrame += new NewFrameEventHandler(Video_NewFrame);
@@ -122,19 +150,19 @@ namespace CameraViewer {
                     }
                 }
 
+                cameraControls = VideoSource.SourceObject as IAMVideoProcAmp;
+
                 if (!ReceivingFrames) {
                     return false;
                 }
 
                 VideoCapabilities Capability = VideoSource.VideoCapabilities[17];
 
-                FrameSizeX = Capability.FrameSize.Width;
-                FrameSizeY = Capability.FrameSize.Height;
-                FrameCenterX = FrameSizeX / 2;
-                FrameCenterY = FrameSizeY / 2;
-                lock (_locker) {
-
-                }
+                ImgSizeX = Capability.FrameSize.Width;
+                ImgSizeY = Capability.FrameSize.Height;
+                ImgCenterX = ImgSizeX / 2;
+                ImgCenterY = ImgSizeY / 2;
+                lock (_locker) { }  // wait
                 //PauseProcessing = false;
                 return true;
             }
@@ -146,8 +174,8 @@ namespace CameraViewer {
         public List<string> GetDeviceList() {
             List<string> Devices = new List<string>();
 
-            FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-            foreach (FilterInfo device in videoDevices) {
+            FilterInfoCollection videoDevices = new FilterInfoCollection(AForge.Video.DirectShow.FilterCategory.VideoInputDevice);
+            foreach (AForge.Video.DirectShow.FilterInfo device in videoDevices) {
                 Devices.Add(device.Name);
             }
             return (Devices);
@@ -156,92 +184,23 @@ namespace CameraViewer {
         public List<string> GetMonikerStrings() {
             List<string> Monikers = new List<string>();
 
-            FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-            foreach (FilterInfo device in videoDevices) {
+            FilterInfoCollection videoDevices = new FilterInfoCollection(AForge.Video.DirectShow.FilterCategory.VideoInputDevice);
+            foreach (AForge.Video.DirectShow.FilterInfo device in videoDevices) {
                 Monikers.Add(device.MonikerString);
             }
             return (Monikers);
         }
 
 
-        List<AForgeFunction> MeasurementFunctions = new List<AForgeFunction>();
-        // The list of functions processing the image shown to user:
-        List<AForgeFunction> DisplayFunctions = new List<AForgeFunction>();
-
-
-        enum DataGridViewColumns { Function, Active, Int, Double, R, G, B };
-
-        public delegate void AForgeFilter(ref Bitmap frame);
-        class AForgeFunction {
-            public AForgeFilter func { get; set; }
-        }
-
-        private List<AForgeFunction> BuildFilterList() {
-            List<AForgeFunction> FunctionList = new List<AForgeFunction>();
-
-            FunctionList.Clear();
-
-            if (Contrast)
-                FunctionList.Add(new AForgeFunction() { func = Contrast_scretchFunc });
-            if (GrayScale)
-                FunctionList.Add(new AForgeFunction() { func = GrayscaleFunc });
-            if (Invert)
-                FunctionList.Add(new AForgeFunction() { func = InvertFunc });
-            if (EdgeDetect)
-                FunctionList.Add(new AForgeFunction() { func = Edge_detectFunc });
-            if (NoiseReduce)
-                FunctionList.Add(new AForgeFunction() { func = NoiseReduction_Funct });
-            if (Threshold)
-                FunctionList.Add(new AForgeFunction() { func = ThresholdFunc });
-
-
-            return FunctionList;
-        }
-
-        public void BuildOutFunctionsList() {
-            bool pause = PauseProcessing;
-            if (VideoSource != null) {
-                if (ReceivingFrames) {
-
-                    paused = true;
-                    while (!paused) {
-                        Thread.Sleep(10);
-                    };
-                }
-            }
-
-            DisplayFunctions.Clear();
-            DisplayFunctions = BuildFilterList();
-        }
-
-        public void ClearDisplayFunctionsList() {
-            // Stop video
-            bool pause = PauseProcessing;
-            if (VideoSource != null) {
-                if (ReceivingFrames) {
-                    // stop video
-                    //PauseProcessing = true;  // ask for stop
-                    paused = false;
-                    int maxTimes = 10;
-                    while (!paused && maxTimes > 0) {
-                        maxTimes--;
-                        Thread.Sleep(10);  // wait until really stopped
-                    };
-                }
-            }
-            DisplayFunctions.Clear();
-        }
-
-
         private bool GetFrame = false;     // Tells we need to get a frame from the stream 
         private Bitmap TempFrame;      // for temp processing
-
-
-        static readonly object _object = new object();
 
         public bool Mirror { get; set; }
 
         public bool GrayScale { get; set; }
+        public bool R { get; set; }
+        public bool G { get; set; }
+        public bool B { get; set; }
 
         public bool Invert { get; set; }
         public bool EdgeDetect { get; set; }
@@ -278,23 +237,36 @@ namespace CameraViewer {
         }
 
         Bitmap frame;
-        bool TemporaryFrameIsReading = false;
+        DateTime timeStart = DateTime.Now;
+        public int currentFramesSecond { get; private set; } = 0;
+        public int targetFramesSecond { get; set; } = 25;
+
+        public bool processing = false;
+        int processingCount = 0;
         private void Video_NewFrame(object sender, NewFrameEventArgs eventArgs) {
             ReceivingFrames = true;
+            if (processing && processingCount < 100) {   // dump it
+                processingCount++;
+                Thread.Sleep(2);
+                return;
+            }
+            if ((DateTime.Now - timeStart).Milliseconds < targetFramesSecond) {
+                return;
+            }
+
+            processing = true;
+            processingCount = 0;
 
             lock (_locker) {
                 frame = (Bitmap)eventArgs.Frame.Clone();
             }
 
             if (GetFrame) {
-                if (!TemporaryFrameIsReading) {
-                    TemporaryFrameIsReading = true;
-                    if (TempFrame != null) {
-                        TempFrame.Dispose();
-                    }
-                    TempFrame = (Bitmap)frame.Clone();
-                    GetFrame = false;
+                if (TempFrame != null) {
+                    TempFrame.Dispose();
                 }
+                TempFrame = (Bitmap)frame.Clone();
+                GetFrame = false;
             }
 
             if (PauseProcessing) {
@@ -308,17 +280,21 @@ namespace CameraViewer {
                 return;
             }
 
-            try {
-                if (DisplayFunctions != null) {
-                    foreach (AForgeFunction f in DisplayFunctions) {
-                        f.func(ref frame);
-                    }
-                }
-            }
-            catch { }
+            if (GrayScale)
+                GrayscaleImg(ref frame, R, G, B);
+            if (Invert)
+                InvertImg(ref frame);
+            if (EdgeDetect)
+                EdgeDetectImg(ref frame);
+            if (NoiseReduce)
+                NoiseReduction(ref frame);
+            if (Threshold)
+                ThresholdImg(ref frame);
+            if (Contrast)
+                ContrastNormalize(ref frame);
 
             if (Mirror) {
-                frame = MirrorFunc(frame);
+                frame = MirrorImg(frame);
             }
 
             if (DrawGrid) {
@@ -326,7 +302,7 @@ namespace CameraViewer {
             }
 
             if (Zoom)
-                ZoomFunc(ref frame, ZoomValue);
+                ZoomImg(ref frame, ZoomValue);
 
             if (this.rotateCam) {
                 switch (rotateAmount) {
@@ -345,22 +321,110 @@ namespace CameraViewer {
                 }
             }
 
+            if (eyeTracker.isActive) {
+                frame = HandleEyeTracking(frame);
+            }
+
+            // send to openCV for additional stuff
+            if (!(!ShapeVariables.calcCircles && !ShapeVariables.calcLines && !ShapeVariables.calcRectTri))
+                frame = OpenCVMethods.PerformShapeDetection(frame, ShapeVariables);
+
+            if (optiVariables.calcOpticalFlow) {
+                frame = openCVMethods.Dense_Optical_Flow(frame, optiVariables, this);
+            }
+
             // handle fullscreen mode
             if (isFullScreenMode) {
                 frame = ResizeImage(frame, fullscreenSize);
             }
 
+            // getting accessViolation Exceptions
+            Bitmap frame2;
+            lock (_locker) {
+                frame2 = (Bitmap)frame.Clone();
+            }
+
+            processing = false;
+
+            currentFramesSecond = 1000 / ((DateTime.Now - timeStart).Milliseconds + 1);
+            cameraAdjustments.label1.BeginInvoke((MethodInvoker)delegate () { cameraAdjustments.label1.Text = $"Camera {(DateTime.Now - timeStart).Milliseconds}ms {currentFramesSecond}fps"; });
+
+
             lock (_locker) {
                 if (ImageBox.Image != null) {
                     ImageBox.Image.Dispose();
                 }
-                ImageBox.Image = (Bitmap)frame.Clone();
+                ImageBox.Image = (Bitmap)frame2.Clone();
             }
 
+
             frame.Dispose();
+            frame2.Dispose();
+            processing = false;
+            Thread.Sleep(1);
+            timeStart = DateTime.Now;
         }
 
-        private void NoiseReduction_Funct(ref Bitmap frame) {
+        public double xEyeDetection;
+        public double yEyeDetection;
+        private Bitmap HandleEyeTracking(Bitmap frame) {
+            // get the current tracking point, notes: this could probably be enhanced with sparse optical flow point tracking
+            // if the environment is favorable however, this technique does work extremely well
+            if (isEyeCamera) {
+                Tuple<double, double> retVal = FindBlobLocation(frame);
+                xEyeDetection = retVal.Item1;
+                yEyeDetection = retVal.Item2;
+
+                Pen GPen = new Pen(Color.LawnGreen, 1);
+                Graphics g = Graphics.FromImage(frame);
+                // now draw the current locations on the frame
+                int size1 = eyeTracker.eyeTrackingMatrix.GetLength(1);
+                int size0 = eyeTracker.eyeTrackingMatrix.GetLength(0);
+                for (int i = 0; i < size0; i++) {
+                    for (int j = 0; j < size1; j++)
+                        g.DrawArc(GPen, new Rectangle(eyeTracker.eyeTrackingMatrix[i, j], new Size(2, 2)), 0, 360);
+                }
+
+                g.DrawRectangle(GPen, eyeTracker.rectX, eyeTracker.rectY, eyeTracker.rectHeight, eyeTracker.rectWidth);
+
+                g.Dispose();
+
+                return frame;
+            }
+
+            if (eyeTracker.recordingPoints) {
+                Pen BlackPen = new Pen(Color.AliceBlue, 2);
+                Graphics g = Graphics.FromImage(frame);
+                System.Drawing.Point rectPoint = ScalePoints(eyeTracker.xCal, eyeTracker.yCal, Eyetracking.maxSize, Eyetracking.maxSize);
+                rectPoint.X += frame.Height/18;
+                rectPoint.Y += frame.Height / 18;
+                g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(12, 12)), 0, 360);
+                rectPoint.X += 2;
+                rectPoint.Y += 2;
+                BlackPen = new Pen(Color.DarkOrange, 2);
+                g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(9, 9)), 0, 360);
+                g.Dispose();
+            }
+            else {  // draw the location!!
+                Pen BlackPen = new Pen(Color.AliceBlue, 4);
+                Graphics g = Graphics.FromImage(frame);
+                System.Drawing.Point rectPoint = ScalePoints(eyeTracker.TrackedXVal, eyeTracker.TrackedYVal, Eyetracking.maxSize, Eyetracking.maxSize);
+                rectPoint.X += frame.Height / 18;
+                rectPoint.Y += frame.Height / 20;
+                rectPoint.Y += eyeTracker.yTune;
+                rectPoint.X += eyeTracker.xTune;
+                g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(40, 40)), 0, 360);
+                rectPoint.X += 2;
+                rectPoint.Y += 2;
+                BlackPen = new Pen(Color.DarkOrange, 3);
+                g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(37, 37)), 0, 360);
+                g.Dispose();
+            }
+
+            return frame;
+        }
+
+        private void NoiseReduction(ref Bitmap frame) {
             frame = Grayscale.CommonAlgorithms.RMY.Apply(frame);    // Make gray
             switch (NoiseReduceValue) {
                 case 1:
@@ -392,12 +456,11 @@ namespace CameraViewer {
             frame = RGBfilter.Apply(frame);
         }
 
-        // needed whenever the frame size is altered
-        public static Bitmap ResizeImage(Bitmap imgToResize, Size size) {
+        public static Bitmap ResizeImageNoCuda(Bitmap imgToResize, Size size) {
             try {
                 Bitmap b = new Bitmap(size.Width, size.Height);
                 using (Graphics g = Graphics.FromImage((System.Drawing.Image)b)) {
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bilinear;
                     g.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
                 }
                 return b;
@@ -407,7 +470,38 @@ namespace CameraViewer {
             }
         }
 
-        private void ZoomFunc(ref Bitmap frame, double Factor) {
+        // uses cuda if available
+        public static Bitmap ResizeImage(Bitmap imgToResize, Size size) {
+            // emgu cuda detection can be a little finicy sometimes, but try catching cost virtually nothing compared to actually changing the size of the img  
+            if (CudaInvoke.HasCuda) {
+                try {
+                    // determine ratio between current and desired size
+
+                    double ratio = (double)size.Height / (imgToResize.Height);
+                    Mat dst = new Mat();
+                    Image<Bgr, Byte> imageCV = new Image<Bgr, byte>(imgToResize);
+                    var result = imageCV.CopyBlank();
+                    var handle = GCHandle.Alloc(result);
+                    Mat matToResize = imageCV.Mat;
+                    using (GpuMat gMatSrc = new GpuMat())
+                    using (GpuMat gMatDst = new GpuMat()) {
+                        gMatSrc.Upload(matToResize);
+                        Emgu.CV.Cuda.CudaInvoke.Resize(gMatSrc, gMatDst, new Size(0, 0), ratio, ratio, Inter.Area);
+                        gMatDst.Download(dst);
+                    }
+                    handle.Free();
+                    return dst.Bitmap;
+                }
+                catch {
+                    return ResizeImageNoCuda(imgToResize, size);
+                }
+            }
+            else {
+                return ResizeImageNoCuda(imgToResize, size);
+            }
+        }
+
+        private void ZoomImg(ref Bitmap frame, double Factor) {
             if (rotateCam && (rotateAmount == 0 || rotateAmount == 2)) {
                 int x = (int)(1280 * 1.7);
                 int y = (int)(720 * 1.7);
@@ -428,14 +522,10 @@ namespace CameraViewer {
             int SizeY = (int)(OrgSizeY / Factor);
             Crop CrFilter = new Crop(new Rectangle(fromX, fromY, SizeX, SizeY));
             frame = CrFilter.Apply(frame);
-            ResizeBilinear RBfilter = new ResizeBilinear(OrgSizeX, OrgSizeY);
-            frame = RBfilter.Apply(frame);
-
-
+            frame = ResizeImage(frame, new Size(OrgSizeX, OrgSizeY));
         }
 
-        // todo change drop down options to explicit
-        private void Edge_detectFunc(ref Bitmap frame) {
+        private void EdgeDetectImg(ref Bitmap frame) {
             frame = Grayscale.CommonAlgorithms.RMY.Apply(frame);    // Make gray
             switch (EdgeDetectValue) {
                 case 1:
@@ -468,12 +558,12 @@ namespace CameraViewer {
             frame = RGBfilter.Apply(frame);
         }
 
-        private void InvertFunc(ref Bitmap frame) {
+        private void InvertImg(ref Bitmap frame) {
             Invert filter = new Invert();
             filter.ApplyInPlace(frame);
         }
 
-        private void ThresholdFunc(ref Bitmap frame) {
+        private void ThresholdImg(ref Bitmap frame) {
             frame = Grayscale.CommonAlgorithms.RMY.Apply(frame);
             Threshold filter = new Threshold(ThresholdValue);
             filter.ApplyInPlace(frame);
@@ -481,29 +571,74 @@ namespace CameraViewer {
             frame = toColFilter.Apply(frame);
         }
 
-        private void GrayscaleFunc(ref Bitmap frame) {
-            Grayscale toGrFilter = new Grayscale(0.2125, 0.7154, 0.0721);       // create grayscale MirrFilter (BT709)
-            Bitmap fr = toGrFilter.Apply(frame);
-            GrayscaleToRGB toColFilter = new GrayscaleToRGB();
-            frame = toColFilter.Apply(fr);
+        public Tuple<double, double> FindBlobLocation(Bitmap bmp) {
+            Tuple<double, double> toRet = new Tuple<double, double>(0, 0);
+
+            // Set up the detector with default parameters.
+            BlobCounter blobCounter = new BlobCounter();
+
+            blobCounter.FilterBlobs = true;
+            blobCounter.MinHeight = 5;
+            blobCounter.MinWidth = 5;
+            blobCounter.MaxHeight = 20;
+            blobCounter.MaxHeight = 20;            
+
+            blobCounter.ProcessImage(bmp);
+            Rectangle[] rects = blobCounter.GetObjectsRectangles();
+
+            List<Rectangle> filteredRects = rects.Where(a => a.Location.X > eyeTracker.rectX && a.Location.X < (eyeTracker.rectX + eyeTracker.rectWidth)
+                && a.Location.Y > eyeTracker.rectY && a.Location.Y < eyeTracker.rectY + eyeTracker.rectHeight).ToList();
+
+            if (filteredRects.Any()) {
+                toRet = new Tuple<double, double>(filteredRects.First().Location.X, filteredRects.First().Location.Y);
+            }
+
+            return toRet;
         }
 
-        private void Contrast_scretchFunc(ref Bitmap frame) {
+        private void ContrastNormalize(ref Bitmap frame) {
             ContrastStretch filter = new ContrastStretch();
-            // process image
             filter.ApplyInPlace(frame);
         }
 
-        private Bitmap MirrorFunc(Bitmap frame) {
+        private void GrayscaleImg(ref Bitmap frame, bool R, bool G, bool B) {
+            // create filter
+            Bitmap fr;
+            if (!(!R && !G && !B) && (!R || !G || !B)) {
+                EuclideanColorFiltering filter = new EuclideanColorFiltering();
+                // set center colol and radius
+                filter.CenterColor = new AForge.Imaging.RGB(Color.FromArgb(30, 200, 30));
+                filter.Radius = 150;
+                // apply the filter
+                filter.ApplyInPlace(frame);
+                Grayscale toGrFilter = new Grayscale(R ? 0.3 : 0, G ? .9 : 0, B ? 0.3 : 0);
+                fr = toGrFilter.Apply(frame);
+                GrayscaleToRGB toColFilter = new GrayscaleToRGB();
+                frame = toColFilter.Apply(fr);
+            }
+            else {
+                frame = Grayscale.CommonAlgorithms.RMY.Apply(frame);
+                GrayscaleToRGB toColFilter = new GrayscaleToRGB();
+                frame = toColFilter.Apply(frame);
+            }
+        }
+
+        private Bitmap MirrorImg(Bitmap frame) {
             Mirror Mfilter = new Mirror(false, true);
-            // apply the MirrFilter
             Mfilter.ApplyInPlace(frame);
             return (frame);
         }
 
-        private void RotateByFrameCenter(int x, int y, out int px, out int py) {
-            px = (int)(Math.Cos(0) * (x - FrameCenterX) - Math.Sin(0) * (y - FrameCenterY) + FrameCenterX);
-            py = (int)(Math.Sin(0) * (x - FrameCenterX) + Math.Cos(0) * (y - FrameCenterY) + FrameCenterY);
+        private System.Drawing.Point ScalePoints(int x, int y, int maxX, int maxY) {
+            int px = (int)((double)x / maxX * ImgSizeX);
+            int py = (int)((double)y / maxY * ImgSizeY);
+            return new System.Drawing.Point(px, py);
+        }
+
+        private System.Drawing.Point ScalePoints(double x, double y, int maxX, int maxY) {
+            int px = (int)(x / maxX * ImgSizeX);
+            int py = (int)(y / maxY * ImgSizeY);
+            return new System.Drawing.Point(px, py);
         }
 
         private void DrawGridFunc(Bitmap img) {
@@ -513,24 +648,14 @@ namespace CameraViewer {
             int step = this.GridIncrement;
             // vertical
             int i = 0;
-            while (i < FrameSizeX) {
-                RotateByFrameCenter(FrameCenterX + i, 0, out x1, out y1);
-                RotateByFrameCenter(FrameCenterX + i, FrameSizeY, out x2, out y2);
-                g.DrawLine(BlackPen, x1, y1, x2, y2);
-                RotateByFrameCenter(FrameCenterX - i, 0, out x1, out y1);
-                RotateByFrameCenter(FrameCenterX - i, FrameSizeY, out x2, out y2);
-                g.DrawLine(BlackPen, x1, y1, x2, y2);
+            while (i < ImgSizeX) {
+                g.DrawLine(BlackPen, i, 0, i, ImgSizeY);
                 i = i + step;
             }
             // horizontal
             i = 0;
-            while (i < FrameSizeY) {
-                RotateByFrameCenter(0, FrameCenterY + i, out x1, out y1);
-                RotateByFrameCenter(FrameSizeX, FrameCenterY + i, out x2, out y2);
-                g.DrawLine(BlackPen, x1, y1, x2, y2);
-                RotateByFrameCenter(0, FrameCenterY - i, out x1, out y1);
-                RotateByFrameCenter(FrameSizeX, FrameCenterY - i, out x2, out y2);
-                g.DrawLine(BlackPen, x1, y1, x2, y2);
+            while (i < ImgSizeY) {
+                g.DrawLine(BlackPen, 0, i, ImgSizeX, i);
                 i = i + step;
             }
 
