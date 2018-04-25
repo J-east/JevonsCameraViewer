@@ -7,7 +7,7 @@ It uses the AForge.net and EmguCV's openCV wrapper for obtaining the USB video s
 
 [![Overview](http://img.youtube.com/vi/Mp8Z6vDXkm8/0.jpg)](http://www.youtube.com/watch?v=Mp8Z6vDXkm8 "Camera Viewer")
 
-Todo: a lot of the code will be organized a lot better in the next few weeks, just wanted to get something out there as soon as possible. Eventually the eyetracking will be placed in it's own independent project that can be feed two bitmap images and return the eye tracking results. This will make it easier to use the code in other systems if people so desire.
+Todo: a lot of the code will be organized a lot better in the next few weeks, just wanted to get something out there as soon as possible. Eventually the eyetracking will be placed in it's own independent project that can be fed two bitmap images and return the eye tracking results. This will make it easier to use the code in other systems if people so desire.
 
 I will post more detail instructions on how to get the project compiling, but with a fresh install of visual studio 2017 on a 64 pc with a Cuda compatible graphics card, you should be able to load the solution and the nuget packages will be updated automatically. 
 
