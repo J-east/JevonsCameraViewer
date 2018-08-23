@@ -33,6 +33,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -42,6 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cnc.cs" />
+    <Compile Include="CncSetupControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CncSetupControl.Designer.cs">
+      <DependentUpon>CncSetupControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="SerialComms.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerialCommSetupPanel.cs">
@@ -52,9 +60,21 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CncSetupControl.resx">
+      <DependentUpon>CncSetupControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SerialCommSetupPanel.resx">
       <DependentUpon>SerialCommSetupPanel.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FileLogger\FileLogger.csproj">
+      <Project>{ce918c0f-6150-43f1-b130-932be30a6536}</Project>
+      <Name>FileLogger</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
