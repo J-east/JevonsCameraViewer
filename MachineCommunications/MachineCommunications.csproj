@@ -58,6 +58,7 @@
     <Compile Include="SerialCommSetupPanel.Designer.cs">
       <DependentUpon>SerialCommSetupPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="TinyGSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="CncSetupControl.resx">

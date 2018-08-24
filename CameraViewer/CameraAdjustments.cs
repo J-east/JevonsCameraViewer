@@ -377,63 +377,63 @@ namespace CameraViewer {
         }
 
         private void cbLineDetection_CheckedChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.calcLines = cbLineDetection.Checked;
+            //camera.ShapeVariables.calcLines = cbLineDetection.Checked;
         }
 
         private void cbCircleDetection_CheckedChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.calcCircles = cbCircleDetection.Checked;
+            //camera.ShapeVariables.calcCircles = cbCircleDetection.Checked;
         }
 
         private void cbRectangleTriDetection_CheckedChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.calcRectTri = cbRectangleTriDetection.Checked;
+            //camera.ShapeVariables.calcRectTri = cbRectangleTriDetection.Checked;
         }
 
         private void nlineCanny_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.lineCannyThreshold = (double)nlineCanny.Value;
+            //camera.ShapeVariables.lineCannyThreshold = (double)nlineCanny.Value;
         }
 
         private void nLineThreashold_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.lineThreshold = (int)nLineThreashold.Value;
+            //camera.ShapeVariables.lineThreshold = (int)nLineThreashold.Value;
         }
 
         private void nThresholdLinking_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.cannyThresholdLinking = (double)nThresholdLinking.Value;
+            //camera.ShapeVariables.cannyThresholdLinking = (double)nThresholdLinking.Value;
         }
 
         private void nMinLineWidth_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.minLineWidth = (double)nMinLineWidth.Value;
+            //camera.ShapeVariables.minLineWidth = (double)nMinLineWidth.Value;
         }
 
         private void nMinRadius_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.minradius = (int)nMinRadius.Value;
+            //camera.ShapeVariables.minradius = (int)nMinRadius.Value;
         }
 
         private void nMaxRadius_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.maxRadius = (int)nMaxRadius.Value;
+            //camera.ShapeVariables.maxRadius = (int)nMaxRadius.Value;
         }
 
         private void nCircleCanny_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.circleCannyThreshold = (int)nCircleCanny.Value;
+            //camera.ShapeVariables.circleCannyThreshold = (int)nCircleCanny.Value;
         }
 
         private void nCircleAccumulator_ValueChanged(object sender, EventArgs e) {
-            camera.ShapeVariables.circleAccumulatorThreshold = (int)nCircleAccumulator.Value;
+            //camera.ShapeVariables.circleAccumulatorThreshold = (int)nCircleAccumulator.Value;
         }
 
         private void cbVisualFlow_CheckedChanged(object sender, EventArgs e) {
-            camera.optiVariables.calcOpticalFlow = cbVisualFlow.Checked;
+            //camera.optiVariables.calcOpticalFlow = cbVisualFlow.Checked;
         }
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e) {
-            camera.optiVariables.stepRate = (int)nFlowDensity.Value;
+            //camera.optiVariables.stepRate = (int)nFlowDensity.Value;
         }
 
         private void numericUpDown2_ValueChanged(object sender, EventArgs e) {
-            camera.optiVariables.frameReduction = (int)((int)nResolutionReduction.Value % 2 == 1 ? nResolutionReduction.Value - 1 : nResolutionReduction.Value);
+            //camera.optiVariables.frameReduction = (int)((int)nResolutionReduction.Value % 2 == 1 ? nResolutionReduction.Value - 1 : nResolutionReduction.Value);
         }
 
         private void numericUpDown1_ValueChanged_1(object sender, EventArgs e) {
-            camera.optiVariables.shiftThatCounts = (int)numericUpDown1.Value;
+            //camera.optiVariables.shiftThatCounts = (int)numericUpDown1.Value;
         }
 
         private void cbEyeTracking_CheckedChanged(object sender, EventArgs e) {

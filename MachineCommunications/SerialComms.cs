@@ -10,7 +10,7 @@ using static FileLogger.FileLogger;
 
 namespace MachineCommunications
 {
-    class SerialComm {
+    public class SerialComm {
 
         SerialPort Port = new SerialPort();
 

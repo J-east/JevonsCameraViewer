@@ -41,6 +41,8 @@ namespace CameraViewer {
             // Associate the event-handling method with the
             // KeyDown event.
             this.KeyDown += new KeyEventHandler(MainForm_KeyDown);
+
+            this.cncSetupControl1.FinalizeSetup(serialCommSetupPanel1);
         }
 
         // press any key to continue

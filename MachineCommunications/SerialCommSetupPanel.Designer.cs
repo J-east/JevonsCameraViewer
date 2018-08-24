@@ -27,6 +27,7 @@
             this.bRefresh = new System.Windows.Forms.Button();
             this.cbCOM = new System.Windows.Forms.ComboBox();
             this.bConnectToDevice = new System.Windows.Forms.Button();
+            this.rbMessages = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
             // lblComPortStatus
@@ -48,6 +49,7 @@
             this.bRefresh.TabIndex = 12;
             this.bRefresh.Text = "Refresh COM";
             this.bRefresh.UseVisualStyleBackColor = true;
+            this.bRefresh.Click += new System.EventHandler(this.bRefresh_Click);
             // 
             // cbCOM
             // 
@@ -67,17 +69,31 @@
             this.bConnectToDevice.TabIndex = 10;
             this.bConnectToDevice.Text = "Connect";
             this.bConnectToDevice.UseVisualStyleBackColor = true;
+            this.bConnectToDevice.Click += new System.EventHandler(this.bConnectToDevice_Click);
+            // 
+            // rbMessages
+            // 
+            this.rbMessages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.rbMessages.Location = new System.Drawing.Point(2, 41);
+            this.rbMessages.Margin = new System.Windows.Forms.Padding(2);
+            this.rbMessages.Name = "rbMessages";
+            this.rbMessages.Size = new System.Drawing.Size(345, 76);
+            this.rbMessages.TabIndex = 14;
+            this.rbMessages.Text = "";
             // 
             // SerialCommSetupPanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.rbMessages);
             this.Controls.Add(this.lblComPortStatus);
             this.Controls.Add(this.bRefresh);
             this.Controls.Add(this.cbCOM);
             this.Controls.Add(this.bConnectToDevice);
             this.Name = "SerialCommSetupPanel";
-            this.Size = new System.Drawing.Size(330, 46);
+            this.Size = new System.Drawing.Size(349, 122);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -89,5 +105,6 @@
         private System.Windows.Forms.Button bRefresh;
         private System.Windows.Forms.ComboBox cbCOM;
         private System.Windows.Forms.Button bConnectToDevice;
+        private System.Windows.Forms.RichTextBox rbMessages;
     }
 }

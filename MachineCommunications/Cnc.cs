@@ -11,14 +11,16 @@ using System.Web.Script.Serialization;
 
 namespace MachineCommunications {
     public class CNC {
-        static FormMain MainForm;
+        static CncSetupControl setUpControl;
+        static SerialCommSetupPanel serialSetupControl;
         private SerialComm Com;
 
         static ManualResetEventSlim _readyEvent = new ManualResetEventSlim(false);
 
-        public CNC(FormMain MainF) {
-            MainForm = MainF;
-            Com = new SerialComm(this, MainF);
+        public CNC(CncSetupControl cncSetup, SerialCommSetupPanel serialCommSetup) {
+            setUpControl = cncSetup;
+            serialSetupControl = serialCommSetup;
+            Com = new SerialComm(this, serialCommSetup);
             SlowXY = false;
             SlowZ = false;
             SlowA = false;
@@ -38,7 +40,7 @@ namespace MachineCommunications {
             // Connected = false;
             Homing = false;
             _readyEvent.Set();
-            MainForm.UpdateCncConnectionStatus(false);
+            serialSetupControl.UpdateCncConnectionStatus(false);
         }
 
         public void Close() {
@@ -47,7 +49,7 @@ namespace MachineCommunications {
             Connected = false;
             Homing = false;
             _readyEvent.Set();
-            MainForm.UpdateCncConnectionStatus(false);
+            serialSetupControl.UpdateCncConnectionStatus(false);
         }
 
         public bool Connect(String name) {
@@ -248,7 +250,7 @@ namespace MachineCommunications {
             if ((dX < 1) && (dY < 1)) {
                 // Small move
                 if (SlowXY) {
-                    if ((double)Properties.Settings.Default.CNC_SmallMovementSpeed > SlowSpeedXY) {
+                    if ((double)TinyGSettings.CNC_SmallMovementSpeed > SlowSpeedXY) {
                         command = SmallMovementString + "X" + X.ToString(CultureInfo.InvariantCulture) +
                                                        " Y" + Y.ToString(CultureInfo.InvariantCulture);
                     }
@@ -338,7 +340,7 @@ namespace MachineCommunications {
                 }
                 else {
                     if (SlowXY) {
-                        if ((double)Properties.Settings.Default.CNC_SmallMovementSpeed > SlowSpeedXY) {
+                        if ((double)TinyGSettings.CNC_SmallMovementSpeed > SlowSpeedXY) {
                             command = SmallMovementString + "X" + X.ToString(CultureInfo.InvariantCulture) +
                                                            " Y" + Y.ToString(CultureInfo.InvariantCulture);
                         }
@@ -437,11 +439,11 @@ namespace MachineCommunications {
             }
             if (dZ < 1.1) {
                 if (SlowZ) {
-                    if ((double)Properties.Settings.Default.CNC_SmallMovementSpeed > SlowSpeedZ) {
+                    if ((double)TinyGSettings.CNC_SmallMovementSpeed > SlowSpeedZ) {
                         command = "G1 F" + SlowSpeedZ.ToString() + " Z" + Z.ToString(CultureInfo.InvariantCulture);
                     }
                     else {
-                        command = "G1 F" + Properties.Settings.Default.CNC_SmallMovementSpeed.ToString() + " Z" + Z.ToString(CultureInfo.InvariantCulture);
+                        command = "G1 F" + TinyGSettings.CNC_SmallMovementSpeed.ToString() + " Z" + Z.ToString(CultureInfo.InvariantCulture);
                     }
                 }
             }
@@ -494,11 +496,8 @@ namespace MachineCommunications {
 
             if (line.Contains("SYSTEM READY")) {
                 Error();
-                MainForm.ShowMessageBox(
-                    "TinyG Reset.",
-                    "System Reset",
-                    MessageBoxButtons.OK);
-                MainForm.UpdateCncConnectionStatus(false);
+                MessageBox.Show("TinyG Reset.","System Reset",MessageBoxButtons.OK);
+                serialSetupControl.UpdateCncConnectionStatus(false);
                 return;
             }
 
@@ -506,10 +505,7 @@ namespace MachineCommunications {
                 line = line.Substring(13);
                 int i = line.IndexOf('"');
                 line = line.Substring(0, i);
-                MainForm.ShowMessageBox(
-                    "TinyG Message:",
-                    line,
-                    MessageBoxButtons.OK);
+                MessageBox.Show("TinyG Message:", line, MessageBoxButtons.OK);
                 return;
             }
 
@@ -520,8 +516,8 @@ namespace MachineCommunications {
                     return;
                 }
                 Error();
-                MainForm.ShowMessageBox(
-                    "TinyG error. Review situation and restart if needed.",
+                MessageBox.Show(
+                    "TinyG error. Press Restart Button",
                     "TinyG Error",
                     MessageBoxButtons.OK);
                 return;
@@ -563,7 +559,6 @@ namespace MachineCommunications {
                 NewStatusReport(line);
                 if (line.Contains("\"stat\":3")) {
                     AppendToLog("ReadyEvent stat");
-                    MainForm.ResetMotorTimer();
                     _readyEvent.Set();
                 }
                 return;
@@ -592,7 +587,7 @@ namespace MachineCommunications {
                 line = line.Substring(5);
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_sys = line;
+                TinyGSettings.TinyG_sys = line;
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent sys group");
                 return;
@@ -604,7 +599,7 @@ namespace MachineCommunications {
                 line = line.Substring(5);
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_x = line;
+                TinyGSettings.TinyG_x = line;
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent x group");
                 return;
@@ -616,7 +611,7 @@ namespace MachineCommunications {
                 line = line.Substring(5);
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_y = line;
+                TinyGSettings.TinyG_y = line;
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent y group");
                 return;
@@ -628,31 +623,19 @@ namespace MachineCommunications {
                 line = line.Substring(5);
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_z = line;
+                TinyGSettings.TinyG_z = line;
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent z group");
                 return;
             }
-
-            if (line.StartsWith("{\"r\":{\"a\":")) {
-                // response to reading settings for saving them
-                // remove the wrapper:
-                line = line.Substring(5);
-                int i = line.IndexOf("}}");
-                line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_a = line;
-                _readyEvent.Set();
-                AppendToLog("ReadyEvent a group");
-                return;
-            }
-
+           
             if (line.StartsWith("{\"r\":{\"1\":")) {
                 // response to reading settings for saving them
                 // remove the wrapper:
                 line = line.Substring(5);
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_m1 = line;
+                TinyGSettings.TinyG_m1 = line;
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent m1 group");
                 return;
@@ -664,7 +647,7 @@ namespace MachineCommunications {
                 line = line.Substring(5);
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_m2 = line;
+                TinyGSettings.TinyG_m2 = line;
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent m2 group");
                 return;
@@ -676,21 +659,9 @@ namespace MachineCommunications {
                 line = line.Substring(5);
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_m3 = line;
+                TinyGSettings.TinyG_m3 = line;
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent m3 group");
-                return;
-            }
-
-            if (line.StartsWith("{\"r\":{\"4\":")) {
-                // response to reading settings for saving them
-                // remove the wrapper:
-                line = line.Substring(5);
-                int i = line.IndexOf("}}");
-                line = line.Substring(0, i + 2);
-                Properties.Settings.Default.TinyG_m4 = line;
-                _readyEvent.Set();
-                AppendToLog("ReadyEvent m4 group");
                 return;
             }
 
@@ -700,7 +671,6 @@ namespace MachineCommunications {
                 line = line.Replace("{\"1", "{\"motor1");
                 line = line.Replace("{\"2", "{\"motor2");
                 line = line.Replace("{\"3", "{\"motor3");
-                line = line.Replace("{\"4", "{\"motor4");
                 NewSetting(line);
                 _readyEvent.Set();
                 AppendToLog("ReadyEvent r");
@@ -710,7 +680,7 @@ namespace MachineCommunications {
         }  // end InterpretLine()
 
         // =================================================================================
-        // TinyG JSON stuff
+        // TinyG JSON 
         // =================================================================================
 
         // =================================================================================
@@ -729,46 +699,46 @@ namespace MachineCommunications {
             // NOTE: Some firmware versions use mpox, mpoy,... some use posx, posy, ... 
             // This should be reflected in the public variable names
             private double _posx = 0;
-            public double posx // <======================== here
+            public double posx 
             {
                 get { return _posx; }
                 set {
                     _posx = value;
                     CNC.setCurrX(_posx);
-                    CNC.MainForm.ValueUpdater("posx", _posx.ToString("0.000", CultureInfo.InvariantCulture));
+                    //CNC.setUpControl.ValueUpdater("posx", _posx.ToString("0.000", CultureInfo.InvariantCulture));
                 }
             }
 
             private double _posy = 0;
-            public double posy // <======================== and here
+            public double posy 
             {
                 get { return _posy; }
                 set {
                     _posy = value;
                     CNC.setCurrY(_posy);
-                    CNC.MainForm.ValueUpdater("posy", _posy.ToString("0.000", CultureInfo.InvariantCulture));
+                    //CNC.setUpControl.ValueUpdater("posy", _posy.ToString("0.000", CultureInfo.InvariantCulture));
                 }
             }
 
             private double _posz = 0;
-            public double posz // <======================== and here
+            public double posz 
             {
                 get { return _posz; }
                 set {
                     _posz = value;
                     CNC.setCurrZ(_posz);
-                    CNC.MainForm.ValueUpdater("posz", _posz.ToString("0.000", CultureInfo.InvariantCulture));
+                    //CNC.setUpControl.ValueUpdater("posz", _posz.ToString("0.000", CultureInfo.InvariantCulture));
                 }
             }
 
             private double _posa = 0;
-            public double posa // <======================== and here
+            public double posa 
             {
                 get { return _posa; }
                 set {
                     _posa = value;
                     CNC.setCurrA(_posa);
-                    CNC.MainForm.ValueUpdater("posa", _posa.ToString("0.000", CultureInfo.InvariantCulture));
+                    //CNC.setUpControl.ValueUpdater("posa", _posa.ToString("0.000", CultureInfo.InvariantCulture));
                 }
             }
 
@@ -818,7 +788,7 @@ namespace MachineCommunications {
                 get { return _mt; }
                 set {
                     _mt = value;
-                    CNC.MainForm.ValueUpdater("mt", _mt);
+                    //CNC.setUpControl.ValueUpdater("mt", _mt);
                 }
             }
 
@@ -828,7 +798,7 @@ namespace MachineCommunications {
                 get { return _xjm; }
                 set {
                     _xjm = value;
-                    CNC.MainForm.ValueUpdater("xjm", _xjm);
+                    //CNC.setUpControl.ValueUpdater("xjm", _xjm);
                 }
             }
 
@@ -837,7 +807,7 @@ namespace MachineCommunications {
                 get { return _yjm; }
                 set {
                     _yjm = value;
-                    CNC.MainForm.ValueUpdater("yjm", _yjm);
+                    //CNC.setUpControl.ValueUpdater("yjm", _yjm);
                 }
             }
 
@@ -846,7 +816,7 @@ namespace MachineCommunications {
                 get { return _zjm; }
                 set {
                     _zjm = value;
-                    CNC.MainForm.ValueUpdater("zjm", _zjm);
+                    //CNC.setUpControl.ValueUpdater("zjm", _zjm);
                 }
             }
 
@@ -855,7 +825,7 @@ namespace MachineCommunications {
                 get { return _ajm; }
                 set {
                     _ajm = value;
-                    CNC.MainForm.ValueUpdater("ajm", _ajm);
+                    //CNC.setUpControl.ValueUpdater("ajm", _ajm);
                 }
             }
 
@@ -865,7 +835,7 @@ namespace MachineCommunications {
                 get { return _xvm; }
                 set {
                     _xvm = value;
-                    CNC.MainForm.ValueUpdater("xvm", _xvm);
+                    //CNC.setUpControl.ValueUpdater("xvm", _xvm);
                 }
             }
 
@@ -874,7 +844,7 @@ namespace MachineCommunications {
                 get { return _yvm; }
                 set {
                     _yvm = value;
-                    CNC.MainForm.ValueUpdater("yvm", _yvm);
+                    //CNC.setUpControl.ValueUpdater("yvm", _yvm);
                 }
             }
 
@@ -883,7 +853,7 @@ namespace MachineCommunications {
                 get { return _zvm; }
                 set {
                     _zvm = value;
-                    CNC.MainForm.ValueUpdater("zvm", _zvm);
+                    //CNC.setUpControl.ValueUpdater("zvm", _zvm);
                 }
             }
 
@@ -892,7 +862,7 @@ namespace MachineCommunications {
                 get { return _avm; }
                 set {
                     _avm = value;
-                    CNC.MainForm.ValueUpdater("avm", _avm);
+                    //CNC.setUpControl.ValueUpdater("avm", _avm);
                 }
             }
 
@@ -903,7 +873,7 @@ namespace MachineCommunications {
                 get { return _motor1mi; }
                 set {
                     _motor1mi = value;
-                    CNC.MainForm.ValueUpdater("1mi", _motor1mi);
+                    //CNC.setUpControl.ValueUpdater("1mi", _motor1mi);
                 }
             }
 
@@ -912,7 +882,7 @@ namespace MachineCommunications {
                 get { return _motor2mi; }
                 set {
                     _motor2mi = value;
-                    CNC.MainForm.ValueUpdater("2mi", _motor2mi);
+                    //CNC.setUpControl.ValueUpdater("2mi", _motor2mi);
                 }
             }
 
@@ -921,7 +891,7 @@ namespace MachineCommunications {
                 get { return _motor3mi; }
                 set {
                     _motor3mi = value;
-                    CNC.MainForm.ValueUpdater("3mi", _motor3mi);
+                    //CNC.setUpControl.ValueUpdater("3mi", _motor3mi);
                 }
             }
 
@@ -930,7 +900,7 @@ namespace MachineCommunications {
                 get { return _motor4mi; }
                 set {
                     _motor4mi = value;
-                    CNC.MainForm.ValueUpdater("4mi", _motor4mi);
+                    //CNC.setUpControl.ValueUpdater("4mi", _motor4mi);
                 }
             }
 
@@ -940,7 +910,7 @@ namespace MachineCommunications {
                 get { return _motor1tr; }
                 set {
                     _motor1tr = value;
-                    CNC.MainForm.ValueUpdater("1tr", _motor1tr);
+                    //CNC.setUpControl.ValueUpdater("1tr", _motor1tr);
                 }
             }
 
@@ -949,7 +919,7 @@ namespace MachineCommunications {
                 get { return _motor2tr; }
                 set {
                     _motor2tr = value;
-                    CNC.MainForm.ValueUpdater("2tr", _motor2tr);
+                    //CNC.setUpControl.ValueUpdater("2tr", _motor2tr);
                 }
             }
 
@@ -958,7 +928,7 @@ namespace MachineCommunications {
                 get { return _motor3tr; }
                 set {
                     _motor3tr = value;
-                    CNC.MainForm.ValueUpdater("3tr", _motor3tr);
+                    //CNC.setUpControl.ValueUpdater("3tr", _motor3tr);
                 }
             }
 
@@ -967,7 +937,7 @@ namespace MachineCommunications {
                 get { return _motor4tr; }
                 set {
                     _motor4tr = value;
-                    CNC.MainForm.ValueUpdater("4tr", _motor4tr);
+                    //CNC.setUpControl.ValueUpdater("4tr", _motor4tr);
                 }
             }
 
@@ -977,7 +947,7 @@ namespace MachineCommunications {
                 get { return _motor1sa; }
                 set {
                     _motor1sa = value;
-                    CNC.MainForm.ValueUpdater("1sa", _motor1sa);
+                    //CNC.setUpControl.ValueUpdater("1sa", _motor1sa);
                 }
             }
 
@@ -986,7 +956,7 @@ namespace MachineCommunications {
                 get { return _motor2sa; }
                 set {
                     _motor2sa = value;
-                    CNC.MainForm.ValueUpdater("2sa", _motor2sa);
+                    //CNC.setUpControl.ValueUpdater("2sa", _motor2sa);
                 }
             }
 
@@ -995,7 +965,7 @@ namespace MachineCommunications {
                 get { return _motor3sa; }
                 set {
                     _motor3sa = value;
-                    CNC.MainForm.ValueUpdater("3sa", _motor3sa);
+                    //CNC.setUpControl.ValueUpdater("3sa", _motor3sa);
                 }
             }
 
@@ -1004,7 +974,7 @@ namespace MachineCommunications {
                 get { return _motor4sa; }
                 set {
                     _motor4sa = value;
-                    CNC.MainForm.ValueUpdater("4sa", _motor4sa);
+                    //CNC.setUpControl.ValueUpdater("4sa", _motor4sa);
                 }
             }
 
@@ -1013,7 +983,7 @@ namespace MachineCommunications {
                 get { return _xjh; }
                 set {
                     _xjh = value;
-                    CNC.MainForm.ValueUpdater("xjh", _xjh);
+                    //CNC.setUpControl.ValueUpdater("xjh", _xjh);
                 }
             }
 
@@ -1022,7 +992,7 @@ namespace MachineCommunications {
                 get { return _yjh; }
                 set {
                     _yjh = value;
-                    CNC.MainForm.ValueUpdater("yjh", _yjh);
+                    //CNC.setUpControl.ValueUpdater("yjh", _yjh);
                 }
             }
 
@@ -1031,7 +1001,7 @@ namespace MachineCommunications {
                 get { return _zjh; }
                 set {
                     _zjh = value;
-                    CNC.MainForm.ValueUpdater("zjh", _zjh);
+                    //CNC.setUpControl.ValueUpdater("zjh", _zjh);
                 }
             }
 
@@ -1040,7 +1010,7 @@ namespace MachineCommunications {
                 get { return _xsv; }
                 set {
                     _xsv = value;
-                    CNC.MainForm.ValueUpdater("xsv", _xsv);
+                    //CNC.setUpControl.ValueUpdater("xsv", _xsv);
                 }
             }
 
@@ -1049,7 +1019,7 @@ namespace MachineCommunications {
                 get { return _ysv; }
                 set {
                     _ysv = value;
-                    CNC.MainForm.ValueUpdater("ysv", _ysv);
+                    //CNC.setUpControl.ValueUpdater("ysv", _ysv);
                 }
             }
 
@@ -1058,7 +1028,7 @@ namespace MachineCommunications {
                 get { return _zsv; }
                 set {
                     _zsv = value;
-                    CNC.MainForm.ValueUpdater("zsv", _zsv);
+                    //CNC.setUpControl.ValueUpdater("zsv", _zsv);
                 }
             }
 
@@ -1067,7 +1037,7 @@ namespace MachineCommunications {
                 get { return _xLV; }
                 set {
                     _xLV = value;
-                    CNC.MainForm.ValueUpdater("xLV", _xLV);
+                    //CNC.setUpControl.ValueUpdater("xLV", _xLV);
                 }
             }
 
@@ -1076,7 +1046,7 @@ namespace MachineCommunications {
                 get { return _yLV; }
                 set {
                     _yLV = value;
-                    CNC.MainForm.ValueUpdater("yLV", _yLV);
+                    //CNC.setUpControl.ValueUpdater("yLV", _yLV);
                 }
             }
 
@@ -1085,7 +1055,7 @@ namespace MachineCommunications {
                 get { return _zLV; }
                 set {
                     _zLV = value;
-                    CNC.MainForm.ValueUpdater("zLV", _zLV);
+                    //CNC.setUpControl.ValueUpdater("zLV", _zLV);
                 }
             }
 
@@ -1094,7 +1064,7 @@ namespace MachineCommunications {
                 get { return _xLB; }
                 set {
                     _xLB = value;
-                    CNC.MainForm.ValueUpdater("xLB", _xLB);
+                    //CNC.setUpControl.ValueUpdater("xLB", _xLB);
                 }
             }
 
@@ -1103,7 +1073,7 @@ namespace MachineCommunications {
                 get { return _yLB; }
                 set {
                     _yLB = value;
-                    CNC.MainForm.ValueUpdater("yLB", _yLB);
+                    //CNC.setUpControl.ValueUpdater("yLB", _yLB);
                 }
             }
 
@@ -1112,7 +1082,7 @@ namespace MachineCommunications {
                 get { return _zLB; }
                 set {
                     _zLB = value;
-                    CNC.MainForm.ValueUpdater("zLB", _zLB);
+                    //CNC.setUpControl.ValueUpdater("zLB", _zLB);
                 }
             }
 
@@ -1121,7 +1091,7 @@ namespace MachineCommunications {
                 get { return _xsn; }
                 set {
                     _xsn = value;
-                    CNC.MainForm.ValueUpdater("xsn", _xsn);
+                    //CNC.setUpControl.ValueUpdater("xsn", _xsn);
                 }
             }
 
@@ -1130,7 +1100,7 @@ namespace MachineCommunications {
                 get { return _ysn; }
                 set {
                     _ysn = value;
-                    CNC.MainForm.ValueUpdater("ysn", _ysn);
+                    //CNC.setUpControl.ValueUpdater("ysn", _ysn);
                 }
             }
 
@@ -1139,7 +1109,7 @@ namespace MachineCommunications {
                 get { return _zsn; }
                 set {
                     _zsn = value;
-                    CNC.MainForm.ValueUpdater("zsn", _zsn);
+                    //CNC.setUpControl.ValueUpdater("zsn", _zsn);
                 }
             }
 
@@ -1148,7 +1118,7 @@ namespace MachineCommunications {
                 get { return _xsx; }
                 set {
                     _xsx = value;
-                    CNC.MainForm.ValueUpdater("xsx", _xsx);
+                    //CNC.setUpControl.ValueUpdater("xsx", _xsx);
                 }
             }
 
@@ -1157,7 +1127,7 @@ namespace MachineCommunications {
                 get { return _ysx; }
                 set {
                     _ysx = value;
-                    CNC.MainForm.ValueUpdater("ysx", _ysx);
+                    //CNC.setUpControl.ValueUpdater("ysx", _ysx);
                 }
             }
 
@@ -1166,7 +1136,7 @@ namespace MachineCommunications {
                 get { return _zsx; }
                 set {
                     _zsx = value;
-                    CNC.MainForm.ValueUpdater("zsx", _zsx);
+                    //CNC.setUpControl.ValueUpdater("zsx", _zsx);
                 }
             }
 

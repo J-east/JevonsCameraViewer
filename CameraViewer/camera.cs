@@ -16,21 +16,17 @@ using AForge.Imaging.Filters;
 using AForge.Math.Geometry;
 using System.Threading.Tasks;
 using DirectShowLib;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
-using Emgu.CV.Structure;
-using Emgu.CV.Util;
-using Emgu.Util;
-using Emgu.CV.Cuda;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+//using OpenCV64Methods;
+
 
 namespace CameraViewer {
     public class Camera {
         public VideoCaptureDevice VideoSource = null;
         private MainForm MainForm;
         private CameraAdjustments cameraAdjustments;
-        OpenCVMethods openCVMethods = new OpenCVMethods();
+        //OpenCVMethods openCVMethods = new OpenCVMethods();
 
         public bool isFullScreenMode = false;
         public Size fullscreenSize = new Size(1920, 1080);
@@ -38,8 +34,8 @@ namespace CameraViewer {
         public bool rotateCam = false;
         public int rotateAmount = 1;
 
-        public ShapeDetectionVariables ShapeVariables = new ShapeDetectionVariables();
-        public OpticalFlowVariable optiVariables = new OpticalFlowVariable();
+        //public ShapeDetectionVariables ShapeVariables = new ShapeDetectionVariables();
+        //public OpticalFlowVariable optiVariables = new OpticalFlowVariable();
 
         public Eyetracking eyeTracker;
 
@@ -326,17 +322,22 @@ namespace CameraViewer {
             }
 
             // send to openCV for additional stuff
-            if (!(!ShapeVariables.calcCircles && !ShapeVariables.calcLines && !ShapeVariables.calcRectTri))
-                frame = OpenCVMethods.PerformShapeDetection(frame, ShapeVariables);
+            //if (!(!ShapeVariables.calcCircles && !ShapeVariables.calcLines && !ShapeVariables.calcRectTri))
+            //    frame = OpenCVMethods.PerformShapeDetection(frame, ShapeVariables);
 
-            if (optiVariables.calcOpticalFlow) {
-                frame = openCVMethods.Dense_Optical_Flow(frame, optiVariables, this);
-            }
+            //if (optiVariables.calcOpticalFlow) {
+            //    frame = openCVMethods.Dense_Optical_Flow(frame, optiVariables);
+            //}
 
             // handle fullscreen mode
-            if (isFullScreenMode) {
-                frame = ResizeImage(frame, fullscreenSize);
-            }
+            //if (isFullScreenMode) {
+            //    try {
+            //        frame = OpenCVMethods.ResizeImage(frame, fullscreenSize);
+            //    }
+            //    catch {
+            //        frame = ResizeImageNoCuda(frame, fullscreenSize);
+            //    }
+            //}
 
             // getting accessViolation Exceptions
             Bitmap frame2;
@@ -470,42 +471,18 @@ namespace CameraViewer {
             }
         }
 
-        // uses cuda if available
-        public static Bitmap ResizeImage(Bitmap imgToResize, Size size) {
-            // emgu cuda detection can be a little finicy sometimes, but try catching cost virtually nothing compared to actually changing the size of the img  
-            if (CudaInvoke.HasCuda) {
-                try {
-                    // determine ratio between current and desired size
-
-                    double ratio = (double)size.Height / (imgToResize.Height);
-                    Mat dst = new Mat();
-                    Image<Bgr, Byte> imageCV = new Image<Bgr, byte>(imgToResize);
-                    var result = imageCV.CopyBlank();
-                    var handle = GCHandle.Alloc(result);
-                    Mat matToResize = imageCV.Mat;
-                    using (GpuMat gMatSrc = new GpuMat())
-                    using (GpuMat gMatDst = new GpuMat()) {
-                        gMatSrc.Upload(matToResize);
-                        Emgu.CV.Cuda.CudaInvoke.Resize(gMatSrc, gMatDst, new Size(0, 0), ratio, ratio, Inter.Area);
-                        gMatDst.Download(dst);
-                    }
-                    handle.Free();
-                    return dst.Bitmap;
-                }
-                catch {
-                    return ResizeImageNoCuda(imgToResize, size);
-                }
-            }
-            else {
-                return ResizeImageNoCuda(imgToResize, size);
-            }
-        }
+        
 
         private void ZoomImg(ref Bitmap frame, double Factor) {
             if (rotateCam && (rotateAmount == 0 || rotateAmount == 2)) {
                 int x = (int)(1280 * 1.7);
                 int y = (int)(720 * 1.7);
-                frame = ResizeImage(frame, new Size(x, y));
+                //try {
+                //    frame = OpenCVMethods.ResizeImage(frame, new Size(x, y));
+                //}
+                //catch {
+                //    frame = ResizeImageNoCuda(frame, new Size(x, y));
+                //}
             }
 
             if (Factor < 0.1) {
@@ -522,7 +499,12 @@ namespace CameraViewer {
             int SizeY = (int)(OrgSizeY / Factor);
             Crop CrFilter = new Crop(new Rectangle(fromX, fromY, SizeX, SizeY));
             frame = CrFilter.Apply(frame);
-            frame = ResizeImage(frame, new Size(OrgSizeX, OrgSizeY));
+            //try {
+            //    frame = OpenCVMethods.ResizeImage(frame, new Size(OrgSizeX, OrgSizeY));
+            //}
+            //catch {
+            //    frame = ResizeImageNoCuda(frame, new Size(OrgSizeX, OrgSizeY));
+            //}
         }
 
         private void EdgeDetectImg(ref Bitmap frame) {

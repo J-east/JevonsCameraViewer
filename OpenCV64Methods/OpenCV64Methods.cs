@@ -8,11 +8,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CameraViewer {
+namespace OpenCV64Methods {
     public class ShapeDetectionVariables {
         public bool calcLines { get; set; }
         public bool calcCircles { get; set; }
@@ -24,7 +25,7 @@ namespace CameraViewer {
         public int lineThreshold { get; set; } = 20;
         public double cannyThresholdLinking { get; set; } = 80.0;
         public double circleCannyThreshold { get; set; } = 32;
-        public double minLineWidth { get; internal set; } = 30;
+        public double minLineWidth { get; set; } = 30;
     }
 
     public class OpticalFlowVariable {
@@ -233,7 +234,7 @@ namespace CameraViewer {
         int frameReduction = 2;
         public List<string[]> lst_measures_flow = new List<string[]>();
         // calculates the optical flow according to the Farneback algorithm 
-        public Bitmap Dense_Optical_Flow(Bitmap bmp, OpticalFlowVariable optiVariables, Camera cam) {
+        public Bitmap Dense_Optical_Flow(Bitmap bmp, OpticalFlowVariable optiVariables) {
             frameReduction = optiVariables.frameReduction < 1 ? 1 : optiVariables.frameReduction;
             // frame becomes previous frame (i.e., prev_frame stores information about current frame)
             prev_frame = matframe;
@@ -525,6 +526,37 @@ namespace CameraViewer {
             gra.DrawImage(overlay.Bitmap, new System.Drawing.Point(0, 0));
 
             return target;
-        }        
+        }
+
+        // uses cuda if available
+        public static Bitmap ResizeImage(Bitmap imgToResize, Size size) {
+            // emgu cuda detection can be a little finicy sometimes, but try catching cost virtually nothing compared to actually changing the size of the img  
+            if (CudaInvoke.HasCuda) {
+                try {
+                    // determine ratio between current and desired size
+
+                    double ratio = (double)size.Height / (imgToResize.Height);
+                    Mat dst = new Mat();
+                    Image<Bgr, Byte> imageCV = new Image<Bgr, byte>(imgToResize);
+                    var result = imageCV.CopyBlank();
+                    var handle = GCHandle.Alloc(result);
+                    Mat matToResize = imageCV.Mat;
+                    using (GpuMat gMatSrc = new GpuMat())
+                    using (GpuMat gMatDst = new GpuMat()) {
+                        gMatSrc.Upload(matToResize);
+                        Emgu.CV.Cuda.CudaInvoke.Resize(gMatSrc, gMatDst, new Size(0, 0), ratio, ratio, Inter.Area);
+                        gMatDst.Download(dst);
+                    }
+                    handle.Free();
+                    return dst.Bitmap;
+                }
+                catch {
+                    throw;
+                }
+            }
+            else {
+                throw new Exception("no cuda");
+            }
+        }
     }
 }
