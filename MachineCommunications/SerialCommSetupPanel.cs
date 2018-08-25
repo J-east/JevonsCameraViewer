@@ -8,12 +8,17 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.IO.Ports;
+using static FileLogger.FileLogger;
+using System.Threading.Tasks;
 
 namespace MachineCommunications {
     public partial class SerialCommSetupPanel : UserControl {
         bool Connected { get; set; }
         string CNC_SerialPort { get; set; }
         bool ErrorState { get; set; }
+        public bool CNC_BlockingWriteDone { get; private set; }
+        public bool JoggingBusy { get; private set; }
+        public bool CNC_WriteOk { get; private set; }
 
         public SerialComm serialComm;
             
@@ -27,6 +32,36 @@ namespace MachineCommunications {
         public void FinalizeSetup(CNC cnc) {
             this.cnc = cnc;
             serialComm = new SerialComm(cnc, this);
+        }
+
+        Thread cancellationThread = null;
+        public bool SendSerialCommand(string command, int Timeout = 250) {
+            if (cnc.ErrorState) {
+                AppendToLog("### " + command + " ignored, cnc is in error state");
+                return false;
+            }
+
+            CNC_BlockingWriteDone = false;
+            Task t = new Task(() => { cancellationThread = Thread.CurrentThread; serialComm.Write(command); });
+            t.Start();
+            int i = 0;
+            if (cnc.Homing) {
+                Timeout = 20000;    // give it 20 seconds
+            }
+            while (!CNC_BlockingWriteDone) {
+                Thread.Sleep(2);
+                Application.DoEvents();
+                i++;
+                if (i > Timeout) {
+                    cancellationThread.Abort();
+                    CNC_BlockingWriteDone = true;
+                    JoggingBusy = false;
+                    cnc.Error();
+                    return false;
+                }
+            }
+
+            return (CNC_WriteOk);
         }
 
         bool Connect(String name) {
