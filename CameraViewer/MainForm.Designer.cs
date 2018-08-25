@@ -39,7 +39,7 @@
             // 
             this.protectedPictureBox0.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.protectedPictureBox0.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.protectedPictureBox0.Location = new System.Drawing.Point(518, 0);
+            this.protectedPictureBox0.Location = new System.Drawing.Point(501, 0);
             this.protectedPictureBox0.Name = "protectedPictureBox0";
             this.protectedPictureBox0.Size = new System.Drawing.Size(1280, 720);
             this.protectedPictureBox0.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -51,7 +51,7 @@
             // 
             this.protectedPictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.protectedPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.protectedPictureBox1.Location = new System.Drawing.Point(518, 720);
+            this.protectedPictureBox1.Location = new System.Drawing.Point(501, 720);
             this.protectedPictureBox1.Name = "protectedPictureBox1";
             this.protectedPictureBox1.Size = new System.Drawing.Size(1280, 720);
             this.protectedPictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;

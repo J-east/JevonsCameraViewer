@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace MachineCommunications {
     public partial class CncSetupControl : UserControl {
@@ -23,147 +24,162 @@ namespace MachineCommunications {
         }
 
         private bool UpdateWindowValues_m() {
-            if (!CNC_Write_m("{\"sr\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""sr"":""""}")) {
                 return false;
             }
 
-            if (!CNC_Write_m("{\"xjm\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xjm"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"xvm\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xvm"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"xsv\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xsv"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"xlv\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xlv"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"xlb\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xlb"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"xsn\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xsn"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"xjh\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xjh"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"xsx\":\"\"}")) {
-                return false;
-            }
-
-            if (!CNC_Write_m("{\"1mi\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"1sa\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"1tr\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""xsx"":""""}")) {
                 return false;
             }
 
-            if (!CNC_Write_m("{\"yjm\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""1mi"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"yvm\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""1sa"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"ysn\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"ysx\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"yjh\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"ysv\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"ylv\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"ylb\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""1tr"":""""}")) {
                 return false;
             }
 
-            if (!CNC_Write_m("{\"2mi\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""yjm"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"2sa\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""yvm"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"2tr\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""ysn"":""""}")) {
                 return false;
             }
-
-            if (!CNC_Write_m("{\"zjm\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""ysx"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"zvm\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""yjh"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"zsn\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""ysv"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"zsx\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""ylv"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"zjh\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"zsv\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"zlv\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"zlb\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""ylb"":""""}")) {
                 return false;
             }
 
-            if (!CNC_Write_m("{\"3mi\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""2mi"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"3sa\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""2sa"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"3tr\":\"\"}")) {
-                return false;
-            }
-
-            if (!CNC_Write_m("{\"ajm\":\"\"}")) {
-                return false;
-            }
-            if (!CNC_Write_m("{\"avm\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""2tr"":""""}")) {
                 return false;
             }
 
-            if (!CNC_Write_m("{\"4mi\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""zjm"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"4sa\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""zvm"":""""}")) {
                 return false;
             }
-            if (!CNC_Write_m("{\"4tr\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""zsn"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""zsx"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""zjh"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""zsv"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""zlv"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""zlb"":""""}")) {
                 return false;
             }
 
-            if (!CNC_Write_m("{\"mt\":\"\"}")) {
+            if (!serialSetup.SendSerialCommand(@"{""3mi"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""3sa"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""3tr"":""""}")) {
+                return false;
+            }
+
+            if (!serialSetup.SendSerialCommand(@"{""ajm"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""avm"":""""}")) {
+                return false;
+            }
+
+            if (!serialSetup.SendSerialCommand(@"{""4mi"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""4sa"":""""}")) {
+                return false;
+            }
+            if (!serialSetup.SendSerialCommand(@"{""4tr"":""""}")) {
+                return false;
+            }
+
+            if (!serialSetup.SendSerialCommand(@"{""mt"":""""}")) {
                 return false;
             }
 
             // Do settings that need to be done always
-            Cnc.IgnoreError = true;
-            Nozzle.ProbingMode(false, JSON);
-            //PumpDefaultSetting();
-            //VacuumDefaultSetting();
-            //Thread.Sleep(100);
-            //Vacuum_checkBox.Checked = true;
-            //Cnc.IgnoreError = false;
-            CNC_Write_m("{\"me\":\"\"}");  // motor power on
-            MotorPower_checkBox.Checked = true;
+            cnc.IgnoreError = true;
+            ProbingMode(false);
+
+            serialSetup.SendSerialCommand(@"{""me"":""""}");  // motor power on
+            cbMotorPower.Checked = true;
             return true;
+        }
+
+        public void ProbingMode(bool set) {
+            if (set) {
+                serialSetup.SendSerialCommand(@"{""zsn"",0}");
+                Thread.Sleep(250);
+                serialSetup.SendSerialCommand(@"{""zsx"",1}");
+                Thread.Sleep(250);
+                serialSetup.SendSerialCommand(@"{""zzb"",0}");
+                Thread.Sleep(250);
+            }
+            else {
+                serialSetup.SendSerialCommand(@"{""zsn"",3}");
+                Thread.Sleep(250);
+                serialSetup.SendSerialCommand(@"{""zsx"",2}");
+                Thread.Sleep(250);
+                serialSetup.SendSerialCommand(@"{""zzb"",2}");
+                Thread.Sleep(250);
+            }
         }
 
         private void xjm_maskedTextBox_TextChanged(object sender, EventArgs e) {

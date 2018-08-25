@@ -58,6 +58,9 @@
             this.bZUp = new System.Windows.Forms.Button();
             this.bZDown = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
+            this.cbMotorPower = new System.Windows.Forms.CheckBox();
+            this.cbVacuumPump = new System.Windows.Forms.CheckBox();
+            this.cbSolenoid = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label26
@@ -426,10 +429,43 @@
             this.label1.TabIndex = 52;
             this.label1.Text = "TinyG Config";
             // 
+            // cbMotorPower
+            // 
+            this.cbMotorPower.AutoSize = true;
+            this.cbMotorPower.Location = new System.Drawing.Point(266, 246);
+            this.cbMotorPower.Name = "cbMotorPower";
+            this.cbMotorPower.Size = new System.Drawing.Size(68, 17);
+            this.cbMotorPower.TabIndex = 53;
+            this.cbMotorPower.Text = "Steppers";
+            this.cbMotorPower.UseVisualStyleBackColor = true;
+            // 
+            // cbVacuumPump
+            // 
+            this.cbVacuumPump.AutoSize = true;
+            this.cbVacuumPump.Location = new System.Drawing.Point(340, 246);
+            this.cbVacuumPump.Name = "cbVacuumPump";
+            this.cbVacuumPump.Size = new System.Drawing.Size(65, 17);
+            this.cbVacuumPump.TabIndex = 54;
+            this.cbVacuumPump.Text = "Vacuum";
+            this.cbVacuumPump.UseVisualStyleBackColor = true;
+            // 
+            // cbSolenoid
+            // 
+            this.cbSolenoid.AutoSize = true;
+            this.cbSolenoid.Location = new System.Drawing.Point(411, 246);
+            this.cbSolenoid.Name = "cbSolenoid";
+            this.cbSolenoid.Size = new System.Drawing.Size(67, 17);
+            this.cbSolenoid.TabIndex = 55;
+            this.cbSolenoid.Text = "Solenoid";
+            this.cbSolenoid.UseVisualStyleBackColor = true;
+            // 
             // CncSetupControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.cbSolenoid);
+            this.Controls.Add(this.cbVacuumPump);
+            this.Controls.Add(this.cbMotorPower);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.bZDown);
             this.Controls.Add(this.bZUp);
@@ -509,5 +545,8 @@
         private System.Windows.Forms.Button bZUp;
         private System.Windows.Forms.Button bZDown;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox cbMotorPower;
+        private System.Windows.Forms.CheckBox cbVacuumPump;
+        private System.Windows.Forms.CheckBox cbSolenoid;
     }
 }
