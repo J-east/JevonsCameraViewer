@@ -13,6 +13,7 @@ namespace MachineCommunications
     public class SerialComm {
 
         SerialPort Port = new SerialPort();
+        public bool SerialPortWriteDone { get; set; }
 
         // To process data on the DataReceived thread, get reference of Cnc, so we can pass data to it.
         private CNC Cnc;
@@ -75,16 +76,12 @@ namespace MachineCommunications
             }
         }
 
-        // ======================================================
-        // Write:
-        // If the PC has more thatn one serial port and one which is not connected to TinyG has hardware handshake
-        // on, the write will hang. Doing write this way catches this situation
-
         public bool Write(string TxText) {
             try {
                 if (Port.IsOpen) {
                     Port.Write(TxText + "\r");
                     AppendToLog("==> " + TxText);
+                    SerialPortWriteDone = true;
                 }
                 else {
                     AppendToLog("Serial port not open, write discarded: " + TxText);

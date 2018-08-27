@@ -15,14 +15,11 @@ namespace MachineCommunications {
     public partial class SerialCommSetupPanel : UserControl {
         bool Connected { get; set; }
         string CNC_SerialPort { get; set; }
-        bool ErrorState { get; set; }
-        public bool CNC_BlockingWriteDone { get; private set; }
+        bool ErrorState { get; set; }        
         public bool JoggingBusy { get; private set; }
         public bool CNC_WriteOk { get; private set; }
 
-        public SerialComm serialComm;
-            
-
+        public SerialComm serialComm;            
         private CNC cnc;
 
         public SerialCommSetupPanel() {
@@ -35,33 +32,31 @@ namespace MachineCommunications {
         }
 
         Thread cancellationThread = null;
-        public bool SendSerialCommand(string command, int Timeout = 250) {
+        public void SendSerialCommand(string command, int Timeout = 250) {
             if (cnc.ErrorState) {
                 AppendToLog("### " + command + " ignored, cnc is in error state");
-                return false;
+                throw new Exception("borked");
             }
 
-            CNC_BlockingWriteDone = false;
+            serialComm.SerialPortWriteDone = false;
             Task t = new Task(() => { cancellationThread = Thread.CurrentThread; serialComm.Write(command); });
             t.Start();
             int i = 0;
-            if (cnc.Homing) {
+            if (cnc.IsHoming) {
                 Timeout = 20000;    // give it 20 seconds
             }
-            while (!CNC_BlockingWriteDone) {
+            while (!serialComm.SerialPortWriteDone) {
                 Thread.Sleep(2);
                 Application.DoEvents();
                 i++;
                 if (i > Timeout) {
                     cancellationThread.Abort();
-                    CNC_BlockingWriteDone = true;
+                    serialComm.SerialPortWriteDone = true;
                     JoggingBusy = false;
-                    cnc.Error();
-                    return false;
+                    cnc.SetErrorState();
+                    throw new Exception("borked");
                 }
-            }
-
-            return (CNC_WriteOk);
+            }            
         }
 
         bool Connect(String name) {
@@ -133,6 +128,8 @@ namespace MachineCommunications {
                     this.CNC_SerialPort = cbCOM.SelectedItem.ToString();
 
                     UpdateCncConnectionStatus(true);
+
+                    cnc.RequestCurrentTinyGConfig();
                 }
             }
             else {

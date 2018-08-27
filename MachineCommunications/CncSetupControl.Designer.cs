@@ -61,6 +61,7 @@
             this.cbMotorPower = new System.Windows.Forms.CheckBox();
             this.cbVacuumPump = new System.Windows.Forms.CheckBox();
             this.cbSolenoid = new System.Windows.Forms.CheckBox();
+            this.bUpdateConfig = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label26
@@ -83,7 +84,6 @@
             this.xvm_maskedTextBox.TabIndex = 24;
             this.xvm_maskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.xvm_maskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
-            this.xvm_maskedTextBox.TextChanged += new System.EventHandler(this.xvm_maskedTextBox_TextChanged);
             // 
             // label27
             // 
@@ -124,7 +124,6 @@
             this.xjm_maskedTextBox.TabIndex = 20;
             this.xjm_maskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.xjm_maskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
-            this.xjm_maskedTextBox.TextChanged += new System.EventHandler(this.xjm_maskedTextBox_TextChanged);
             // 
             // label30
             // 
@@ -155,7 +154,6 @@
             this.yvm_maskedTextBox.TabIndex = 31;
             this.yvm_maskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.yvm_maskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
-            this.yvm_maskedTextBox.TextChanged += new System.EventHandler(this.yvm_maskedTextBox_TextChanged);
             // 
             // label9
             // 
@@ -196,7 +194,6 @@
             this.yjm_maskedTextBox.TabIndex = 27;
             this.yjm_maskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.yjm_maskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
-            this.yjm_maskedTextBox.TextChanged += new System.EventHandler(this.yjm_maskedTextBox_TextChanged);
             // 
             // label5
             // 
@@ -227,7 +224,6 @@
             this.zvm_maskedTextBox.TabIndex = 38;
             this.zvm_maskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.zvm_maskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
-            this.zvm_maskedTextBox.TextChanged += new System.EventHandler(this.zvm_maskedTextBox_TextChanged);
             // 
             // label38
             // 
@@ -268,7 +264,6 @@
             this.zjm_maskedTextBox.TabIndex = 34;
             this.zjm_maskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.zjm_maskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
-            this.zjm_maskedTextBox.TextChanged += new System.EventHandler(this.zjm_maskedTextBox_TextChanged);
             // 
             // label41
             // 
@@ -357,7 +352,8 @@
             this.bYUp.TabIndex = 45;
             this.bYUp.Text = "Y+";
             this.bYUp.UseVisualStyleBackColor = true;
-            this.bYUp.Click += new System.EventHandler(this.bYUp_Click);
+            this.bYUp.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bYUp_MouseDown);
+            this.bYUp.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bYUp_MouseUp);
             // 
             // bYDown
             // 
@@ -368,6 +364,8 @@
             this.bYDown.TabIndex = 46;
             this.bYDown.Text = "Y-";
             this.bYDown.UseVisualStyleBackColor = true;
+            this.bYDown.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bYDown_MouseDown);
+            this.bYDown.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bYDown_MouseUp);
             // 
             // bXDown
             // 
@@ -378,6 +376,8 @@
             this.bXDown.TabIndex = 47;
             this.bXDown.Text = "X-";
             this.bXDown.UseVisualStyleBackColor = true;
+            this.bXDown.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bXDown_MouseDown);
+            this.bXDown.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bXDown_MouseUp);
             // 
             // bXUp
             // 
@@ -388,6 +388,8 @@
             this.bXUp.TabIndex = 48;
             this.bXUp.Text = "X+";
             this.bXUp.UseVisualStyleBackColor = true;
+            this.bXUp.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bXUp_MouseDown);
+            this.bXUp.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bXUp_MouseUp);
             // 
             // bHome
             // 
@@ -408,6 +410,8 @@
             this.bZUp.TabIndex = 50;
             this.bZUp.Text = "Z+";
             this.bZUp.UseVisualStyleBackColor = true;
+            this.bZUp.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bZUp_MouseDown);
+            this.bZUp.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bZUp_MouseUp);
             // 
             // bZDown
             // 
@@ -418,6 +422,8 @@
             this.bZDown.TabIndex = 51;
             this.bZDown.Text = "Z-";
             this.bZDown.UseVisualStyleBackColor = true;
+            this.bZDown.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bZDown_MouseDown);
+            this.bZDown.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bZDown_MouseUp);
             // 
             // label1
             // 
@@ -432,37 +438,51 @@
             // cbMotorPower
             // 
             this.cbMotorPower.AutoSize = true;
-            this.cbMotorPower.Location = new System.Drawing.Point(266, 246);
+            this.cbMotorPower.Location = new System.Drawing.Point(266, 242);
             this.cbMotorPower.Name = "cbMotorPower";
             this.cbMotorPower.Size = new System.Drawing.Size(68, 17);
             this.cbMotorPower.TabIndex = 53;
             this.cbMotorPower.Text = "Steppers";
             this.cbMotorPower.UseVisualStyleBackColor = true;
+            this.cbMotorPower.CheckedChanged += new System.EventHandler(this.cbMotorPower_CheckedChanged);
             // 
             // cbVacuumPump
             // 
             this.cbVacuumPump.AutoSize = true;
-            this.cbVacuumPump.Location = new System.Drawing.Point(340, 246);
+            this.cbVacuumPump.Location = new System.Drawing.Point(340, 242);
             this.cbVacuumPump.Name = "cbVacuumPump";
             this.cbVacuumPump.Size = new System.Drawing.Size(65, 17);
             this.cbVacuumPump.TabIndex = 54;
             this.cbVacuumPump.Text = "Vacuum";
             this.cbVacuumPump.UseVisualStyleBackColor = true;
+            this.cbVacuumPump.CheckedChanged += new System.EventHandler(this.cbVacuumPump_CheckedChanged);
             // 
             // cbSolenoid
             // 
             this.cbSolenoid.AutoSize = true;
-            this.cbSolenoid.Location = new System.Drawing.Point(411, 246);
+            this.cbSolenoid.Location = new System.Drawing.Point(411, 242);
             this.cbSolenoid.Name = "cbSolenoid";
             this.cbSolenoid.Size = new System.Drawing.Size(67, 17);
             this.cbSolenoid.TabIndex = 55;
             this.cbSolenoid.Text = "Solenoid";
             this.cbSolenoid.UseVisualStyleBackColor = true;
+            this.cbSolenoid.CheckedChanged += new System.EventHandler(this.cbSolenoid_CheckedChanged);
+            // 
+            // bUpdateConfig
+            // 
+            this.bUpdateConfig.Location = new System.Drawing.Point(168, 11);
+            this.bUpdateConfig.Name = "bUpdateConfig";
+            this.bUpdateConfig.Size = new System.Drawing.Size(90, 23);
+            this.bUpdateConfig.TabIndex = 56;
+            this.bUpdateConfig.Text = "Update Config";
+            this.bUpdateConfig.UseVisualStyleBackColor = true;
+            this.bUpdateConfig.Click += new System.EventHandler(this.bUpdateConfig_Click);
             // 
             // CncSetupControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.bUpdateConfig);
             this.Controls.Add(this.cbSolenoid);
             this.Controls.Add(this.cbVacuumPump);
             this.Controls.Add(this.cbMotorPower);
@@ -548,5 +568,6 @@
         private System.Windows.Forms.CheckBox cbMotorPower;
         private System.Windows.Forms.CheckBox cbVacuumPump;
         private System.Windows.Forms.CheckBox cbSolenoid;
+        private System.Windows.Forms.Button bUpdateConfig;
     }
 }

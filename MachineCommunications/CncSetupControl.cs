@@ -23,144 +23,16 @@ namespace MachineCommunications {
             serialSetup.FinalizeSetup(cnc);
         }
 
-        private bool UpdateWindowValues_m() {
-            if (!serialSetup.SendSerialCommand(@"{""sr"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""xjm"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""xvm"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""xsv"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""xlv"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""xlb"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""xsn"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""xjh"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""xsx"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""1mi"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""1sa"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""1tr"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""yjm"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""yvm"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""ysn"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""ysx"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""yjh"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""ysv"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""ylv"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""ylb"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""2mi"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""2sa"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""2tr"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""zjm"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""zvm"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""zsn"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""zsx"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""zjh"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""zsv"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""zlv"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""zlb"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""3mi"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""3sa"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""3tr"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""ajm"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""avm"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""4mi"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""4sa"":""""}")) {
-                return false;
-            }
-            if (!serialSetup.SendSerialCommand(@"{""4tr"":""""}")) {
-                return false;
-            }
-
-            if (!serialSetup.SendSerialCommand(@"{""mt"":""""}")) {
-                return false;
-            }
-
+        /// <summary>
+        /// sends commands to tinyG to obtain current configuration
+        /// </summary>        
+        public void UpdateCurrentTinyGConfigUI() {
             // Do settings that need to be done always
             cnc.IgnoreError = true;
             ProbingMode(false);
 
             serialSetup.SendSerialCommand(@"{""me"":""""}");  // motor power on
             cbMotorPower.Checked = true;
-            return true;
         }
 
         public void ProbingMode(bool set) {
@@ -182,31 +54,108 @@ namespace MachineCommunications {
             }
         }
 
-        private void xjm_maskedTextBox_TextChanged(object sender, EventArgs e) {
+        private void cbMotorPower_CheckedChanged(object sender, EventArgs e) {
+            cnc.SetMotorPower(cbMotorPower.Checked);
+        }
+
+        private void cbVacuumPump_CheckedChanged(object sender, EventArgs e) {
+            cnc.SetPumpPower(cbVacuumPump.Checked);
+        }
+
+        private void cbSolenoid_CheckedChanged(object sender, EventArgs e) {
+            cnc.SetVacuumSolenoid(cbSolenoid.Checked);
+        }
+
+        /// <summary>
+        /// sends updated values to the tinyG controller
+        /// </summary>
+        private void bUpdateConfig_Click(object sender, EventArgs e) {
 
         }
 
-        private void xvm_maskedTextBox_TextChanged(object sender, EventArgs e) {
+        enum direction {
+            YUp,
+            YDown,
+            XUp,
+            XDown,
+            ZUp,
+            ZDown
+        }
+
+        static int moveSPD = 200;
+        string moveCMD = $"{{\"gc\":\"G1 F{moveSPD}";
+        int machineSizeX = 400;
+        int machineSizeY = 400;
+        int machineSizeZ = 30;
+        private void JogMachine(direction moveDir) {
+            switch (moveDir){
+                case direction.YUp:
+                    serialSetup.SendSerialCommand($"{moveCMD} Y{machineSizeY}\"}}");
+                    break;
+                case direction.YDown:
+                    serialSetup.SendSerialCommand($"{moveCMD} Y0\"}}");
+                    break;
+                case direction.XUp:
+                    serialSetup.SendSerialCommand($"{moveCMD} X{machineSizeX}\"}}");
+                    break;
+                case direction.XDown:
+                    serialSetup.SendSerialCommand($"{moveCMD} X0\"}}");
+                    break;
+                case direction.ZUp:
+                    serialSetup.SendSerialCommand($"{moveCMD} Z0\"}}");
+                    break;
+                case direction.ZDown:
+                    serialSetup.SendSerialCommand($"{moveCMD} X{machineSizeZ}\"}}");
+                    break;
+            }
+        }
+
+        bool moveMachine = false;
+        private void bXUp_MouseDown(object sender, MouseEventArgs e) {
 
         }
 
-        private void yjm_maskedTextBox_TextChanged(object sender, EventArgs e) {
+        private void bYUp_MouseDown(object sender, MouseEventArgs e) {
 
         }
 
-        private void yvm_maskedTextBox_TextChanged(object sender, EventArgs e) {
+        private void bXDown_MouseDown(object sender, MouseEventArgs e) {
 
         }
 
-        private void zjm_maskedTextBox_TextChanged(object sender, EventArgs e) {
+        private void bYDown_MouseDown(object sender, MouseEventArgs e) {
 
         }
 
-        private void zvm_maskedTextBox_TextChanged(object sender, EventArgs e) {
+        private void bZUp_MouseDown(object sender, MouseEventArgs e) {
 
         }
 
-        private void bYUp_Click(object sender, EventArgs e) {
+        private void bZDown_MouseDown(object sender, MouseEventArgs e) {
+
+        }
+
+        private void bYUp_MouseUp(object sender, MouseEventArgs e) {
+
+        }
+
+        private void bXDown_MouseUp(object sender, MouseEventArgs e) {
+
+        }
+
+        private void bYDown_MouseUp(object sender, MouseEventArgs e) {
+
+        }
+
+        private void bXUp_MouseUp(object sender, MouseEventArgs e) {
+
+        }
+
+        private void bZUp_MouseUp(object sender, MouseEventArgs e) {
+
+        }
+
+        private void bZDown_MouseUp(object sender, MouseEventArgs e) {
 
         }
     }

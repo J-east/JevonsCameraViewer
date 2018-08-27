@@ -12,51 +12,133 @@ using System.Web.Script.Serialization;
 namespace MachineCommunications {
     public class CNC {
         static CncSetupControl setUpControl;
-        static SerialCommSetupPanel serialSetupControl;
+        static SerialCommSetupPanel serialSetup;
         private SerialComm Com;
 
-        static ManualResetEventSlim _readyEvent = new ManualResetEventSlim(false);
+        static ManualResetEventSlim _CncThreadResetToken = new ManualResetEventSlim(false);
 
         public CNC(CncSetupControl cncSetup, SerialCommSetupPanel serialCommSetup) {
             setUpControl = cncSetup;
-            serialSetupControl = serialCommSetup;
+            serialSetup = serialCommSetup;
             Com = new SerialComm(this, serialCommSetup);
             SlowXY = false;
             SlowZ = false;
-            SlowA = false;
         }
 
-        public ManualResetEventSlim ReadyEvent {
+        public ManualResetEventSlim CncThreadResetToken {
             get {
-                return _readyEvent;
+                return _CncThreadResetToken;
             }
         }
 
         public bool Connected { get; set; }
         public bool ErrorState { get; set; }
 
-        public void Error() {
+        public void SetErrorState() {
             ErrorState = true;
-            // Connected = false;
-            Homing = false;
-            _readyEvent.Set();
-            serialSetupControl.UpdateCncConnectionStatus(false);
+
+            IsHoming = false;
+            _CncThreadResetToken.Set();
+            serialSetup.UpdateCncConnectionStatus(false);
+        }
+
+        public void RequestCurrentTinyGConfig() {
+            try {
+                serialSetup.SendSerialCommand(@"{""sr"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xjm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xvm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xsv"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xlv"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xlb"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xsn"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xjh"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""xsx"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""1mi"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""1sa"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""1tr"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""yjm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""yvm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""ysn"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""ysx"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""yjh"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""ysv"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""ylv"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""ylb"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""2mi"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""2sa"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""2tr"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zjm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zvm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zsn"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zsx"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zjh"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zsv"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zlv"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""zlb"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""3mi"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""3sa"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""3tr"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""ajm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""avm"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""4mi"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""4sa"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""4tr"":""""}");
+
+                serialSetup.SendSerialCommand(@"{""mt"":""""}");
+            }
+            catch {
+                throw new Exception();
+            }
         }
 
         public void Close() {
             Com.Close();
             ErrorState = false;
             Connected = false;
-            Homing = false;
-            _readyEvent.Set();
-            serialSetupControl.UpdateCncConnectionStatus(false);
+            IsHoming = false;
+            _CncThreadResetToken.Set();
+            serialSetup.UpdateCncConnectionStatus(false);
         }
 
         public bool Connect(String name) {
-            // For now, just see that the port opens. 
-            // TODO: check that there isTinyG, not just any comm port.
-            // TODO: check/set default values
-
             if (Com.IsOpen) {
                 AppendToLog("Connecting to serial port " + name + ": already open");
                 Connected = true;
@@ -64,11 +146,11 @@ namespace MachineCommunications {
             }
             Com.Open(name);
             ErrorState = false;
-            Homing = false;
-            _readyEvent.Set();
+            IsHoming = false;
+            _CncThreadResetToken.Set();
             Connected = Com.IsOpen;
             if (!Connected) {
-                Error();
+                SetErrorState();
             }
             AppendToLog("Connecting to serial port " + name + ", result:" + Com.IsOpen.ToString());
 
@@ -77,21 +159,21 @@ namespace MachineCommunications {
 
         public bool Write(string command) {
             if (!Com.IsOpen) {
-                AppendToLog("###" + command + " discarded, com not open (readyevent set)");
-                _readyEvent.Set();
+                AppendToLog($"Command: {command} discarded, com not open");
+                _CncThreadResetToken.Set();
                 Connected = false;
                 return false;
             }
             if (ErrorState) {
-                AppendToLog("###" + command + " discarded, error state on (readyevent set)");
-                _readyEvent.Set();
+                AppendToLog($"Command: {command} discarded, CNC in Error State");
+                _CncThreadResetToken.Set();
                 return false;
             }
-            _readyEvent.Reset();
+            _CncThreadResetToken.Reset();
             bool res = Com.Write(command);
-            _readyEvent.Wait();
+            _CncThreadResetToken.Wait();
             if (!res) {
-                Error();
+                SetErrorState();
             }
             return res;
         }
@@ -108,7 +190,7 @@ namespace MachineCommunications {
             }
             bool res = Com.Write(command);
             if (!res) {
-                Error();
+                SetErrorState();
             }
             return res;
         }
@@ -117,31 +199,7 @@ namespace MachineCommunications {
             Com.Write(command);
         }
 
-        // Square compensation:
-        // The machine will be only approximately square. Fortunately, the squareness is easy to measure with camera.
-        // User measures correction value, that we apply to movements and reads.
-        // For example, correction value is +0.002, meaning that for every unit of +Y movement, 
-        // the machine actually also unintentionally moves 0.002 units to +X. 
-        // Therefore, for each movement when the user wants to go to (X, Y),
-        // we really go to (X - 0.002*Y, Y)
-
-        // CurrentX/Y is the corrected value that user sees and uses, and reflects a square machine
-        // TrueX/Y is what the TinyG actually uses.
-
-        public static double SquareCorrection { get; set; }
-
         private static double CurrX;
-        private static double _trueX;
-
-        public double TrueX {
-            get {
-                return (_trueX);
-            }
-            set {
-                _trueX = value;
-            }
-        }
-
         public double CurrentX {
             get {
                 return (CurrX);
@@ -149,12 +207,6 @@ namespace MachineCommunications {
             set {
                 CurrX = value;
             }
-        }
-
-        public static void setCurrX(double x) {
-            _trueX = x;
-            CurrX = x - CurrY * SquareCorrection;
-            //AppendToLog("CNC.setCurrX: x= " + x.ToString() + ", CurrX= " + CurrX.ToString() + ", CurrY= " + CurrY.ToString());
         }
 
         private static double CurrY;
@@ -166,11 +218,6 @@ namespace MachineCommunications {
                 CurrY = value;
             }
         }
-        public static void setCurrY(double y) {
-            CurrY = y;
-            CurrX = _trueX - CurrY * SquareCorrection;
-            //AppendToLog("CNC.setCurrY: "+ y.ToString()+ " CurrX= " + CurrX.ToString());
-        }
 
         private static double CurrZ;
         public double CurrentZ {
@@ -181,28 +228,6 @@ namespace MachineCommunications {
                 CurrZ = value;
             }
         }
-        public static void setCurrZ(double z) {
-            CurrZ = z;
-        }
-
-        private static double CurrA;
-        public double CurrentA {
-            get {
-                return (CurrA);
-            }
-            set {
-                CurrA = value;
-            }
-        }
-        public static void setCurrA(double a) {
-            CurrA = a;
-        }
-
-        public bool SlackCompensation { get; set; }
-        private double SlackCompensationDistance = 0.4;
-
-        public bool SlackCompensationA { get; set; }
-        private double SlackCompensationDistanceA = 5.0;
 
         public string SmallMovementString = "G1 F200 ";
 
@@ -212,27 +237,16 @@ namespace MachineCommunications {
         public bool SlowZ { get; set; }
         public double SlowSpeedZ { get; set; }
 
-        public bool SlowA { get; set; }
-        public double SlowSpeedA { get; set; }
-
-
         public void XY(double X, double Y) {
             double dX = Math.Abs(X - CurrentX);
             double dY = Math.Abs(Y - CurrentY);
             if ((dX < 0.004) && (dY < 0.004)) {
                 AppendToLog(" -- zero XY movement command --");
                 AppendToLog("ReadyEvent: zero movement command");
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 return;   // already there
             }
-            if (!SlackCompensation) {
-                XY_move(X, Y);
-            }
-            else {
-                XY_move(X, Y);
-                XY_move(X - 1.1, Y - 1.1);
-                XY_move(X, Y);
-            }
+            XY_move(X, Y);
         }
 
         private void XY_move(double X, double Y) {
@@ -242,10 +256,9 @@ namespace MachineCommunications {
             if ((dX < 0.004) && (dY < 0.004)) {
                 AppendToLog(" -- zero XY movement command --");
                 AppendToLog("ReadyEvent: zero movement command");
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 return;   // already there
             }
-            X = X + SquareCorrection * Y;
             X = Math.Round(X, 3);
             if ((dX < 1) && (dY < 1)) {
                 // Small move
@@ -274,151 +287,10 @@ namespace MachineCommunications {
                     command = "G0 " + "X" + X.ToString(CultureInfo.InvariantCulture) + " Y" + Y.ToString(CultureInfo.InvariantCulture);
                 }
             }
-            _readyEvent.Reset();
+            _CncThreadResetToken.Reset();
             Com.Write("{\"gc\":\"" + command + "\"}");
-            _readyEvent.Wait();
+            _CncThreadResetToken.Wait();
         }
-
-        public void XYA(double X, double Y, double Am) {
-            bool CompensateXY = false;
-            bool CompensateA = false;
-
-            if ((SlackCompensation) && ((CurrentX > X) || (CurrentY > Y))) {
-                CompensateXY = true;
-            }
-
-            if ((SlackCompensationA) && (CurrentA > (Am - SlackCompensationDistanceA))) {
-                CompensateA = true;
-            }
-
-
-            if ((!CompensateXY) && (!CompensateA)) {
-                XYA_move(X, Y, Am);
-            }
-            else if ((CompensateXY) && (!CompensateA)) {
-                XYA_move(X - SlackCompensationDistance, Y - SlackCompensationDistance, Am);
-                XY_move(X, Y);
-            }
-            else if ((!CompensateXY) && (CompensateA)) {
-                XYA_move(X, Y, Am - SlackCompensationDistanceA);
-                A_move(Am);
-            }
-            else {
-                XYA_move(X - SlackCompensationDistance, Y - SlackCompensationDistance, Am - SlackCompensationDistanceA);
-                XYA_move(X, Y, Am);
-            }
-        }
-
-        private void XYA_move(double X, double Y, double Am) {
-            string command;
-            double dX = Math.Abs(X - CurrentX);
-            double dY = Math.Abs(Y - CurrentY);
-            double dA = Math.Abs(Am - CurrentA);
-
-            while ((Am - CurrentA) > 180) {
-                Am = Am - 360;
-            }
-            while ((Am - CurrentA) < -180) {
-                Am = Am + 360;
-            }
-
-
-            if ((dX < 0.004) && (dY < 0.004) && (dA < 0.01)) {
-                AppendToLog(" -- zero XYA movement command --");
-                AppendToLog("ReadyEvent: zero movement command");
-                _readyEvent.Set();
-                return;   // already there
-            }
-
-            X = X + SquareCorrection * Y;
-            if ((dX < 1.0) && (dY < 1.0)) {
-                // small movement
-                // First do XY move, then A. This works always.
-                // (small moves and fast settings can sometimes cause problems)
-                if ((dX < 0.004) && (dY < 0.004)) {
-                    AppendToLog(" -- XYA command, XY already there --");
-                }
-                else {
-                    if (SlowXY) {
-                        if ((double)TinyGSettings.CNC_SmallMovementSpeed > SlowSpeedXY) {
-                            command = SmallMovementString + "X" + X.ToString(CultureInfo.InvariantCulture) +
-                                                           " Y" + Y.ToString(CultureInfo.InvariantCulture);
-                        }
-                        else {
-                            command = "G1 F" + SlowSpeedXY.ToString()
-                                    + " X" + X.ToString(CultureInfo.InvariantCulture) + " Y" + Y.ToString(CultureInfo.InvariantCulture);
-                        }
-                    }
-                    else {
-                        command = SmallMovementString + "X" + X.ToString(CultureInfo.InvariantCulture) +
-                                                       " Y" + Y.ToString(CultureInfo.InvariantCulture);
-                    }
-                    _readyEvent.Reset();
-                    Com.Write("{\"gc\":\"" + command + "\"}");
-                    _readyEvent.Wait();
-                }
-
-                // then A:
-                if (dA < 0.01 || Am == CurrentA) {
-                    _readyEvent.Set();
-                    AppendToLog(" -- XYA command, XY already there --");
-                }
-                else {
-                    if (SlowA) {
-                        command = "G1 F" + SlowSpeedA.ToString() + " A" + Am.ToString(CultureInfo.InvariantCulture);
-                    }
-                    else {
-                        command = "G0 A" + Am.ToString(CultureInfo.InvariantCulture);
-                    }
-                    _readyEvent.Reset();
-                    Com.Write("{\"gc\":\"" + command + "\"}");
-                    _readyEvent.Wait();
-                }
-            }
-            else {
-                // normal case, large move
-                // Possibilities:
-                // SlowA, SlowXY
-                // SlowA, FastXY
-                // FastA, SlowXY
-                // Fast A, Fast XY
-                // To avoid side effects, we'll separate a and xy for first three cases
-                if (SlowA || (!SlowA && SlowXY)) {
-                    // Do A first, then XY
-                    if (dA < 0.01) {
-                        AppendToLog(" -- XYA command, XY already there --");
-                    }
-                    else {
-                        if (SlowA) {
-                            command = "G1 F" + SlowSpeedA.ToString() + " A" + Am.ToString(CultureInfo.InvariantCulture);
-                        }
-                        else {
-                            command = "G0 A" + Am.ToString(CultureInfo.InvariantCulture);
-                        }
-                        _readyEvent.Reset();
-                        Com.Write("{\"gc\":\"" + command + "\"}");
-                        _readyEvent.Wait();
-                    }
-                    // A done, we know XY is slow and large
-                    command = "G1 F" + SlowSpeedXY.ToString() +
-                                " X" + X.ToString(CultureInfo.InvariantCulture) +
-                                " Y" + Y.ToString(CultureInfo.InvariantCulture);
-                    _readyEvent.Reset();
-                    Com.Write("{\"gc\":\"" + command + "\"}");
-                    _readyEvent.Wait();
-                }
-                else {
-                    // Fast A, Fast XY
-                    command = "G0 " + "X" + X.ToString(CultureInfo.InvariantCulture) +
-                                     " Y" + Y.ToString(CultureInfo.InvariantCulture) +
-                                     " A" + Am.ToString(CultureInfo.InvariantCulture);
-                    _readyEvent.Reset();
-                    Com.Write("{\"gc\":\"" + command + "\"}");
-                    _readyEvent.Wait();
-                }
-            }
-        }
-
 
         public void Z(double Z) {
             // z calibrator (one thing that I never want to happen is for the z to crash into the board)
@@ -428,13 +300,12 @@ namespace MachineCommunications {
                 return;
             }
 
-
             string command = "G0 Z" + Z.ToString(CultureInfo.InvariantCulture);
             double dZ = Math.Abs(Z - CurrentZ);
             if (dZ < 0.005) {
                 AppendToLog(" -- zero Z movement command --");
                 AppendToLog("ReadyEvent: zero movement command");
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 return;   // already there
             }
             if (dZ < 1.1) {
@@ -455,39 +326,39 @@ namespace MachineCommunications {
                     command = "G0 Z" + Z.ToString(CultureInfo.InvariantCulture);
                 }
             }
-            _readyEvent.Reset();
+            _CncThreadResetToken.Reset();
             Com.Write("{\"gc\":\"" + command + "\"}");
-            _readyEvent.Wait();
+            _CncThreadResetToken.Wait();
         }
 
-        public void A(double A) {
-            if (Math.Abs(A - CurrentA) < 0.01) {
-                AppendToLog(" -- zero A movement command --");
-                _readyEvent.Set();
-                return;   // already there
-            }
-            if ((SlackCompensationA) && (CurrentA > (A - SlackCompensationDistanceA))) {
-                A_move(A - SlackCompensationDistanceA);
-                A_move(A);
+        public void SetMotorPower(bool turnOn) {
+            if (turnOn) {
+                serialSetup.SendSerialCommand("{\"me\":\"\"}");
             }
             else {
-                A_move(A);
+                serialSetup.SendSerialCommand("{\"md\":\"\"}");
             }
-        }
-        private void A_move(double A) {
-            string command;
-            if (SlowA) {
-                command = "G1 F" + SlowSpeedA.ToString() + " A" + A.ToString(CultureInfo.InvariantCulture);
-            }
-            else {
-                command = "G0 A" + A.ToString(CultureInfo.InvariantCulture);
-            }
-            _readyEvent.Reset();
-            Com.Write("{\"gc\":\"" + command + "\"}");
-            _readyEvent.Wait();
         }
 
-        public bool Homing { get; set; }
+        public void SetPumpPower(bool turnOn) {
+            if (turnOn) {
+                serialSetup.SendSerialCommand("{\"gc\":\"M03\"}");
+            }
+            else {
+                serialSetup.SendSerialCommand("{\"gc\":\"M05\"}");
+            }
+        }
+
+        public void SetVacuumSolenoid(bool enabled) {
+            if (enabled) {
+                serialSetup.SendSerialCommand("{\"gc\":\"M08\"}");
+            }
+            else {
+                serialSetup.SendSerialCommand("{\"gc\":\"M09\"}");
+            }
+        }
+
+        public bool IsHoming { get; set; }
         public bool IgnoreError { get; set; }
 
         public void InterpretLine(string line) {
@@ -495,9 +366,9 @@ namespace MachineCommunications {
             AppendToLog(line);
 
             if (line.Contains("SYSTEM READY")) {
-                Error();
-                MessageBox.Show("TinyG Reset.","System Reset",MessageBoxButtons.OK);
-                serialSetupControl.UpdateCncConnectionStatus(false);
+                SetErrorState();
+                MessageBox.Show("TinyG Reset.", "System Reset", MessageBoxButtons.OK);
+                serialSetup.UpdateCncConnectionStatus(false);
                 return;
             }
 
@@ -515,10 +386,10 @@ namespace MachineCommunications {
                     AppendToLog("### Ignored file not open error ###");
                     return;
                 }
-                Error();
+                SetErrorState();
                 MessageBox.Show(
-                    "TinyG error. Press Restart Button",
-                    "TinyG Error",
+                    "TinyG Error: Please Press Reset Button to Contiune",
+                    "TinyG Error Received",
                     MessageBoxButtons.OK);
                 return;
             }
@@ -529,27 +400,9 @@ namespace MachineCommunications {
                 return;
             }
 
-            /* Special homing handling is not needed in this firmware version
-            if (Homing)
-            {
-                if (line.StartsWith("{\"sr\":"))
-                {
-                    // Status report
-                    NewStatusReport(line);
-				}
-
-                if (line.Contains("\"home\":1"))
-                {
-                    _readyEvent.Set();
-                    AppendToLog("ReadyEvent home");
-                }
-                return; 
-            }
-            */
-
             if (line.StartsWith("tinyg [mm] ok>")) {
                 // AppendToLog("ReadyEvent ok");
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 return;
             }
 
@@ -559,7 +412,7 @@ namespace MachineCommunications {
                 NewStatusReport(line);
                 if (line.Contains("\"stat\":3")) {
                     AppendToLog("ReadyEvent stat");
-                    _readyEvent.Set();
+                    _CncThreadResetToken.Set();
                 }
                 return;
             }
@@ -570,14 +423,14 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 NewStatusReport(line);
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent r:sr");
                 return;
             }
 
             if (line.StartsWith("{\"r\":{\"me") || line.StartsWith("{\"r\":{\"md")) {
                 // response to motor power on/off commands
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 return;
             }
 
@@ -588,7 +441,7 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 TinyGSettings.TinyG_sys = line;
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent sys group");
                 return;
             }
@@ -600,7 +453,7 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 TinyGSettings.TinyG_x = line;
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent x group");
                 return;
             }
@@ -612,7 +465,7 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 TinyGSettings.TinyG_y = line;
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent y group");
                 return;
             }
@@ -624,11 +477,11 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 TinyGSettings.TinyG_z = line;
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent z group");
                 return;
             }
-           
+
             if (line.StartsWith("{\"r\":{\"1\":")) {
                 // response to reading settings for saving them
                 // remove the wrapper:
@@ -636,7 +489,7 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 TinyGSettings.TinyG_m1 = line;
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent m1 group");
                 return;
             }
@@ -648,7 +501,7 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 TinyGSettings.TinyG_m2 = line;
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent m2 group");
                 return;
             }
@@ -660,7 +513,7 @@ namespace MachineCommunications {
                 int i = line.IndexOf("}}");
                 line = line.Substring(0, i + 2);
                 TinyGSettings.TinyG_m3 = line;
-                _readyEvent.Set();
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent m3 group");
                 return;
             }
@@ -671,124 +524,68 @@ namespace MachineCommunications {
                 line = line.Replace("{\"1", "{\"motor1");
                 line = line.Replace("{\"2", "{\"motor2");
                 line = line.Replace("{\"3", "{\"motor3");
-                NewSetting(line);
-                _readyEvent.Set();
+                UpdateConfiguration(line);
+                _CncThreadResetToken.Set();
                 AppendToLog("ReadyEvent r");
                 return;
             }
 
         }  // end InterpretLine()
 
-        // =================================================================================
-        // TinyG JSON 
-        // =================================================================================
-
-        // =================================================================================
-        // Status report
-
-        public StatusReport Status;
+        public CurrentMachineState cncState;
         public void NewStatusReport(string line) {
             //AppendToLog("NewStatusReport: " + line);
             JavaScriptSerializer serializer = new JavaScriptSerializer();
-            Status = serializer.Deserialize<StatusReport>(line);
+            cncState = serializer.Deserialize<CurrentMachineState>(line);
         }
 
         [Serializable]
-        public class Sr {
-            // mpox, posy, ...: Position
-            // NOTE: Some firmware versions use mpox, mpoy,... some use posx, posy, ... 
-            // This should be reflected in the public variable names
+        public class MachinePosition {
             private double _posx = 0;
-            public double posx 
-            {
+            public double posx {
                 get { return _posx; }
                 set {
                     _posx = value;
-                    CNC.setCurrX(_posx);
-                    //CNC.setUpControl.ValueUpdater("posx", _posx.ToString("0.000", CultureInfo.InvariantCulture));
                 }
             }
 
             private double _posy = 0;
-            public double posy 
-            {
+            public double posy {
                 get { return _posy; }
                 set {
                     _posy = value;
-                    CNC.setCurrY(_posy);
-                    //CNC.setUpControl.ValueUpdater("posy", _posy.ToString("0.000", CultureInfo.InvariantCulture));
+                    CurrY = _posy;
                 }
             }
 
             private double _posz = 0;
-            public double posz 
-            {
+            public double posz {
                 get { return _posz; }
                 set {
                     _posz = value;
-                    CNC.setCurrZ(_posz);
-                    //CNC.setUpControl.ValueUpdater("posz", _posz.ToString("0.000", CultureInfo.InvariantCulture));
+                    CurrZ = _posz;
                 }
             }
-
-            private double _posa = 0;
-            public double posa 
-            {
-                get { return _posa; }
-                set {
-                    _posa = value;
-                    CNC.setCurrA(_posa);
-                    //CNC.setUpControl.ValueUpdater("posa", _posa.ToString("0.000", CultureInfo.InvariantCulture));
-                }
-            }
-
-            /*
-            public double ofsx { get; set; }
-            public double ofsy { get; set; }
-            public double ofsz { get; set; }
-            public double ofsa { get; set; }
-            public int unit { get; set; }
-            public int stat { get; set; }
-            public int coor { get; set; }
-            public int momo { get; set; }
-            public int dist { get; set; }
-            public int home { get; set; }
-            public int hold { get; set; }
-            public int macs { get; set; }
-            public int cycs { get; set; }
-            public int mots { get; set; }
-            public int plan { get; set; }
-             * */
         }
 
         [Serializable]
-        public class StatusReport {
-            public Sr sr { get; set; }
+        public class CurrentMachineState {
+            public MachinePosition sr { get; set; }
         }
 
-
-        // =================================================================================
-        // Settings
-
-        public Response Settings;
-        public void NewSetting(string line) {
+        public TinyGResponse Settings;
+        public void UpdateConfiguration(string line) {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
-            Settings = serializer.Deserialize<Response>(line);
+            Settings = serializer.Deserialize<TinyGResponse>(line);
         }
 
-        public class Resp {
-
-            // =========================================================
-            // The individual settings we care about and do something
-            // when they change.
-
+        public class MachineConfiguration {
             // mt: motor timeout
             private string _mt = "";
             public string mt {
                 get { return _mt; }
                 set {
                     _mt = value;
-                    //CNC.setUpControl.ValueUpdater("mt", _mt);
                 }
             }
 
@@ -798,7 +595,6 @@ namespace MachineCommunications {
                 get { return _xjm; }
                 set {
                     _xjm = value;
-                    //CNC.setUpControl.ValueUpdater("xjm", _xjm);
                 }
             }
 
@@ -807,7 +603,6 @@ namespace MachineCommunications {
                 get { return _yjm; }
                 set {
                     _yjm = value;
-                    //CNC.setUpControl.ValueUpdater("yjm", _yjm);
                 }
             }
 
@@ -816,7 +611,6 @@ namespace MachineCommunications {
                 get { return _zjm; }
                 set {
                     _zjm = value;
-                    //CNC.setUpControl.ValueUpdater("zjm", _zjm);
                 }
             }
 
@@ -825,7 +619,6 @@ namespace MachineCommunications {
                 get { return _ajm; }
                 set {
                     _ajm = value;
-                    //CNC.setUpControl.ValueUpdater("ajm", _ajm);
                 }
             }
 
@@ -835,7 +628,6 @@ namespace MachineCommunications {
                 get { return _xvm; }
                 set {
                     _xvm = value;
-                    //CNC.setUpControl.ValueUpdater("xvm", _xvm);
                 }
             }
 
@@ -844,7 +636,6 @@ namespace MachineCommunications {
                 get { return _yvm; }
                 set {
                     _yvm = value;
-                    //CNC.setUpControl.ValueUpdater("yvm", _yvm);
                 }
             }
 
@@ -853,7 +644,6 @@ namespace MachineCommunications {
                 get { return _zvm; }
                 set {
                     _zvm = value;
-                    //CNC.setUpControl.ValueUpdater("zvm", _zvm);
                 }
             }
 
@@ -862,7 +652,6 @@ namespace MachineCommunications {
                 get { return _avm; }
                 set {
                     _avm = value;
-                    //CNC.setUpControl.ValueUpdater("avm", _avm);
                 }
             }
 
@@ -873,7 +662,6 @@ namespace MachineCommunications {
                 get { return _motor1mi; }
                 set {
                     _motor1mi = value;
-                    //CNC.setUpControl.ValueUpdater("1mi", _motor1mi);
                 }
             }
 
@@ -882,7 +670,6 @@ namespace MachineCommunications {
                 get { return _motor2mi; }
                 set {
                     _motor2mi = value;
-                    //CNC.setUpControl.ValueUpdater("2mi", _motor2mi);
                 }
             }
 
@@ -891,7 +678,6 @@ namespace MachineCommunications {
                 get { return _motor3mi; }
                 set {
                     _motor3mi = value;
-                    //CNC.setUpControl.ValueUpdater("3mi", _motor3mi);
                 }
             }
 
@@ -900,7 +686,6 @@ namespace MachineCommunications {
                 get { return _motor4mi; }
                 set {
                     _motor4mi = value;
-                    //CNC.setUpControl.ValueUpdater("4mi", _motor4mi);
                 }
             }
 
@@ -910,7 +695,6 @@ namespace MachineCommunications {
                 get { return _motor1tr; }
                 set {
                     _motor1tr = value;
-                    //CNC.setUpControl.ValueUpdater("1tr", _motor1tr);
                 }
             }
 
@@ -919,7 +703,6 @@ namespace MachineCommunications {
                 get { return _motor2tr; }
                 set {
                     _motor2tr = value;
-                    //CNC.setUpControl.ValueUpdater("2tr", _motor2tr);
                 }
             }
 
@@ -928,7 +711,6 @@ namespace MachineCommunications {
                 get { return _motor3tr; }
                 set {
                     _motor3tr = value;
-                    //CNC.setUpControl.ValueUpdater("3tr", _motor3tr);
                 }
             }
 
@@ -937,7 +719,6 @@ namespace MachineCommunications {
                 get { return _motor4tr; }
                 set {
                     _motor4tr = value;
-                    //CNC.setUpControl.ValueUpdater("4tr", _motor4tr);
                 }
             }
 
@@ -947,7 +728,6 @@ namespace MachineCommunications {
                 get { return _motor1sa; }
                 set {
                     _motor1sa = value;
-                    //CNC.setUpControl.ValueUpdater("1sa", _motor1sa);
                 }
             }
 
@@ -956,7 +736,6 @@ namespace MachineCommunications {
                 get { return _motor2sa; }
                 set {
                     _motor2sa = value;
-                    //CNC.setUpControl.ValueUpdater("2sa", _motor2sa);
                 }
             }
 
@@ -965,7 +744,6 @@ namespace MachineCommunications {
                 get { return _motor3sa; }
                 set {
                     _motor3sa = value;
-                    //CNC.setUpControl.ValueUpdater("3sa", _motor3sa);
                 }
             }
 
@@ -974,7 +752,6 @@ namespace MachineCommunications {
                 get { return _motor4sa; }
                 set {
                     _motor4sa = value;
-                    //CNC.setUpControl.ValueUpdater("4sa", _motor4sa);
                 }
             }
 
@@ -983,7 +760,6 @@ namespace MachineCommunications {
                 get { return _xjh; }
                 set {
                     _xjh = value;
-                    //CNC.setUpControl.ValueUpdater("xjh", _xjh);
                 }
             }
 
@@ -992,7 +768,6 @@ namespace MachineCommunications {
                 get { return _yjh; }
                 set {
                     _yjh = value;
-                    //CNC.setUpControl.ValueUpdater("yjh", _yjh);
                 }
             }
 
@@ -1001,7 +776,6 @@ namespace MachineCommunications {
                 get { return _zjh; }
                 set {
                     _zjh = value;
-                    //CNC.setUpControl.ValueUpdater("zjh", _zjh);
                 }
             }
 
@@ -1010,7 +784,6 @@ namespace MachineCommunications {
                 get { return _xsv; }
                 set {
                     _xsv = value;
-                    //CNC.setUpControl.ValueUpdater("xsv", _xsv);
                 }
             }
 
@@ -1019,7 +792,6 @@ namespace MachineCommunications {
                 get { return _ysv; }
                 set {
                     _ysv = value;
-                    //CNC.setUpControl.ValueUpdater("ysv", _ysv);
                 }
             }
 
@@ -1028,7 +800,6 @@ namespace MachineCommunications {
                 get { return _zsv; }
                 set {
                     _zsv = value;
-                    //CNC.setUpControl.ValueUpdater("zsv", _zsv);
                 }
             }
 
@@ -1037,7 +808,6 @@ namespace MachineCommunications {
                 get { return _xLV; }
                 set {
                     _xLV = value;
-                    //CNC.setUpControl.ValueUpdater("xLV", _xLV);
                 }
             }
 
@@ -1046,7 +816,6 @@ namespace MachineCommunications {
                 get { return _yLV; }
                 set {
                     _yLV = value;
-                    //CNC.setUpControl.ValueUpdater("yLV", _yLV);
                 }
             }
 
@@ -1055,7 +824,6 @@ namespace MachineCommunications {
                 get { return _zLV; }
                 set {
                     _zLV = value;
-                    //CNC.setUpControl.ValueUpdater("zLV", _zLV);
                 }
             }
 
@@ -1064,7 +832,6 @@ namespace MachineCommunications {
                 get { return _xLB; }
                 set {
                     _xLB = value;
-                    //CNC.setUpControl.ValueUpdater("xLB", _xLB);
                 }
             }
 
@@ -1073,7 +840,6 @@ namespace MachineCommunications {
                 get { return _yLB; }
                 set {
                     _yLB = value;
-                    //CNC.setUpControl.ValueUpdater("yLB", _yLB);
                 }
             }
 
@@ -1082,7 +848,6 @@ namespace MachineCommunications {
                 get { return _zLB; }
                 set {
                     _zLB = value;
-                    //CNC.setUpControl.ValueUpdater("zLB", _zLB);
                 }
             }
 
@@ -1091,7 +856,6 @@ namespace MachineCommunications {
                 get { return _xsn; }
                 set {
                     _xsn = value;
-                    //CNC.setUpControl.ValueUpdater("xsn", _xsn);
                 }
             }
 
@@ -1100,7 +864,6 @@ namespace MachineCommunications {
                 get { return _ysn; }
                 set {
                     _ysn = value;
-                    //CNC.setUpControl.ValueUpdater("ysn", _ysn);
                 }
             }
 
@@ -1109,7 +872,6 @@ namespace MachineCommunications {
                 get { return _zsn; }
                 set {
                     _zsn = value;
-                    //CNC.setUpControl.ValueUpdater("zsn", _zsn);
                 }
             }
 
@@ -1118,7 +880,6 @@ namespace MachineCommunications {
                 get { return _xsx; }
                 set {
                     _xsx = value;
-                    //CNC.setUpControl.ValueUpdater("xsx", _xsx);
                 }
             }
 
@@ -1127,7 +888,6 @@ namespace MachineCommunications {
                 get { return _ysx; }
                 set {
                     _ysx = value;
-                    //CNC.setUpControl.ValueUpdater("ysx", _ysx);
                 }
             }
 
@@ -1136,16 +896,14 @@ namespace MachineCommunications {
                 get { return _zsx; }
                 set {
                     _zsx = value;
-                    //CNC.setUpControl.ValueUpdater("zsx", _zsx);
                 }
             }
 
-        }   // end class Resp
-
-        public class Response {
-            public Resp r { get; set; }
-            public List<int> f { get; set; }
         }
 
-    }  // end Class CNC
+        public class TinyGResponse {
+            public MachineConfiguration r { get; set; }
+            public List<int> f { get; set; }
+        }
+    }
 }
