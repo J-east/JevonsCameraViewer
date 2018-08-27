@@ -29,13 +29,13 @@ namespace MachineCommunications {
         public void UpdateCurrentTinyGConfigUI() {
             // Do settings that need to be done always
             cnc.IgnoreError = true;
-            ProbingMode(false);
+            DisableZProbeLimit(false);
 
             serialSetup.SendSerialCommand(@"{""me"":""""}");  // motor power on
             cbMotorPower.Checked = true;
         }
 
-        public void ProbingMode(bool set) {
+        public void DisableZProbeLimit(bool set) {
             if (set) {
                 serialSetup.SendSerialCommand(@"{""zsn"",0}");
                 Thread.Sleep(250);
@@ -82,13 +82,13 @@ namespace MachineCommunications {
             ZDown
         }
 
-        static int moveSPD = 200;
+        static int moveSPD = 2000;
         string moveCMD = $"{{\"gc\":\"G1 F{moveSPD}";
         int machineSizeX = 400;
         int machineSizeY = 400;
         int machineSizeZ = 30;
         private void JogMachine(direction moveDir) {
-            switch (moveDir){
+            switch (moveDir) {
                 case direction.YUp:
                     serialSetup.SendSerialCommand($"{moveCMD} Y{machineSizeY}\"}}");
                     break;
@@ -105,58 +105,60 @@ namespace MachineCommunications {
                     serialSetup.SendSerialCommand($"{moveCMD} Z0\"}}");
                     break;
                 case direction.ZDown:
-                    serialSetup.SendSerialCommand($"{moveCMD} X{machineSizeZ}\"}}");
-                    break;
+                    serialSetup.SendSerialCommand($"{moveCMD} Z{machineSizeZ}\"}}");
+                    break;                
             }
+
+            machineIsMoving = true;
         }
 
-        bool moveMachine = false;
+        bool machineIsMoving = false;
         private void bXUp_MouseDown(object sender, MouseEventArgs e) {
-
+            JogMachine(direction.XUp);
         }
 
         private void bYUp_MouseDown(object sender, MouseEventArgs e) {
-
+            JogMachine(direction.YUp);
         }
 
         private void bXDown_MouseDown(object sender, MouseEventArgs e) {
-
+            JogMachine(direction.XDown);
         }
 
         private void bYDown_MouseDown(object sender, MouseEventArgs e) {
-
+            JogMachine(direction.YDown);
         }
 
         private void bZUp_MouseDown(object sender, MouseEventArgs e) {
-
+            JogMachine(direction.ZUp);
         }
 
         private void bZDown_MouseDown(object sender, MouseEventArgs e) {
-
+            JogMachine(direction.ZDown);
         }
 
         private void bYUp_MouseUp(object sender, MouseEventArgs e) {
-
+            serialSetup.SendSerialCommand("!%");
         }
 
         private void bXDown_MouseUp(object sender, MouseEventArgs e) {
-
+            serialSetup.SendSerialCommand("!%");
         }
 
         private void bYDown_MouseUp(object sender, MouseEventArgs e) {
-
+            serialSetup.SendSerialCommand("!%");
         }
 
         private void bXUp_MouseUp(object sender, MouseEventArgs e) {
-
+            serialSetup.SendSerialCommand("!%");
         }
 
         private void bZUp_MouseUp(object sender, MouseEventArgs e) {
-
+            serialSetup.SendSerialCommand("!%");
         }
 
         private void bZDown_MouseUp(object sender, MouseEventArgs e) {
-
+            serialSetup.SendSerialCommand("!%");
         }
     }
 }

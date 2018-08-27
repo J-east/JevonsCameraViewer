@@ -84,7 +84,7 @@ namespace MachineCommunications
                     SerialPortWriteDone = true;
                 }
                 else {
-                    AppendToLog("Serial port not open, write discarded: " + TxText);
+                    AppendToLog("Serial port closed, write discarded: " + TxText);
                 }
                 return true;
             }
@@ -113,15 +113,13 @@ namespace MachineCommunications
                 RxString += Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 //Process each line
                 while (RxString.IndexOf("\n") > -1) {
-                    //Even when RxString does contain terminator we cannot assume that it is the last character received 
                     WorkingString = RxString.Substring(0, RxString.IndexOf("\n") + 1);
-                    //Remove the data and the terminator from tString 
                     RxString = RxString.Substring(RxString.IndexOf("\n") + 1);
                     Cnc.InterpretLine(WorkingString);
                 }
             }
             catch (Exception ex) {
-                AppendToLog("########## " + ex);
+                AppendToLog("EXCEPTION: " + ex);
             }
         }
 
