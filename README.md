@@ -18,6 +18,7 @@ All nuget packages are uptodate, so building is as easy!
 1. Download the latest free community edition of visual studio.
 2. Download this repository via zip or git interface
 3. Disable Common language exceptions (there are occasional exceptions but they are handled)
+
 4: Click Start!
 
 Notes:
