@@ -28,20 +28,20 @@
             this.cameraAdjustments1 = new CameraViewer.CameraAdjustments();
             this.cameraAdjustments2 = new CameraViewer.CameraAdjustments();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.serialCommSetupPanel1 = new MachineCommunications.SerialCommSetupPanel();
-            this.cncSetupControl1 = new MachineCommunications.CncSetupControl();
+            this.pVideoPorts = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.protectedPictureBox0)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.protectedPictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
+            this.pVideoPorts.SuspendLayout();
             this.SuspendLayout();
             // 
             // protectedPictureBox0
             // 
-            this.protectedPictureBox0.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.protectedPictureBox0.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.protectedPictureBox0.Location = new System.Drawing.Point(501, 0);
+            this.protectedPictureBox0.Dock = System.Windows.Forms.DockStyle.Top;
+            this.protectedPictureBox0.Location = new System.Drawing.Point(0, 0);
             this.protectedPictureBox0.Name = "protectedPictureBox0";
-            this.protectedPictureBox0.Size = new System.Drawing.Size(1280, 720);
+            this.protectedPictureBox0.Size = new System.Drawing.Size(1313, 720);
             this.protectedPictureBox0.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.protectedPictureBox0.TabIndex = 10;
             this.protectedPictureBox0.TabStop = false;
@@ -49,11 +49,11 @@
             // 
             // protectedPictureBox1
             // 
-            this.protectedPictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.protectedPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.protectedPictureBox1.Location = new System.Drawing.Point(501, 720);
+            this.protectedPictureBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.protectedPictureBox1.Location = new System.Drawing.Point(0, 720);
             this.protectedPictureBox1.Name = "protectedPictureBox1";
-            this.protectedPictureBox1.Size = new System.Drawing.Size(1280, 720);
+            this.protectedPictureBox1.Size = new System.Drawing.Size(1313, 720);
             this.protectedPictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.protectedPictureBox1.TabIndex = 11;
             this.protectedPictureBox1.TabStop = false;
@@ -61,14 +61,14 @@
             // 
             // cameraAdjustments1
             // 
-            this.cameraAdjustments1.Location = new System.Drawing.Point(3, 386);
+            this.cameraAdjustments1.Location = new System.Drawing.Point(3, 3);
             this.cameraAdjustments1.Name = "cameraAdjustments1";
             this.cameraAdjustments1.Size = new System.Drawing.Size(510, 668);
             this.cameraAdjustments1.TabIndex = 15;
             // 
             // cameraAdjustments2
             // 
-            this.cameraAdjustments2.Location = new System.Drawing.Point(3, 1050);
+            this.cameraAdjustments2.Location = new System.Drawing.Point(3, 677);
             this.cameraAdjustments2.Name = "cameraAdjustments2";
             this.cameraAdjustments2.Size = new System.Drawing.Size(507, 778);
             this.cameraAdjustments2.TabIndex = 16;
@@ -76,38 +76,32 @@
             // panel1
             // 
             this.panel1.AutoScroll = true;
-            this.panel1.Controls.Add(this.serialCommSetupPanel1);
-            this.panel1.Controls.Add(this.cncSetupControl1);
             this.panel1.Controls.Add(this.cameraAdjustments2);
             this.panel1.Controls.Add(this.cameraAdjustments1);
-            this.panel1.Location = new System.Drawing.Point(3, 0);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(534, 1440);
+            this.panel1.Size = new System.Drawing.Size(534, 1068);
             this.panel1.TabIndex = 17;
             // 
-            // serialCommSetupPanel1
+            // pVideoPorts
             // 
-            this.serialCommSetupPanel1.Location = new System.Drawing.Point(3, 258);
-            this.serialCommSetupPanel1.Name = "serialCommSetupPanel1";
-            this.serialCommSetupPanel1.Size = new System.Drawing.Size(504, 122);
-            this.serialCommSetupPanel1.TabIndex = 18;
-            // 
-            // cncSetupControl1
-            // 
-            this.cncSetupControl1.Location = new System.Drawing.Point(-3, 0);
-            this.cncSetupControl1.Name = "cncSetupControl1";
-            this.cncSetupControl1.Size = new System.Drawing.Size(516, 266);
-            this.cncSetupControl1.TabIndex = 17;
+            this.pVideoPorts.AutoScroll = true;
+            this.pVideoPorts.Controls.Add(this.protectedPictureBox0);
+            this.pVideoPorts.Controls.Add(this.protectedPictureBox1);
+            this.pVideoPorts.Dock = System.Windows.Forms.DockStyle.Right;
+            this.pVideoPorts.Location = new System.Drawing.Point(541, 0);
+            this.pVideoPorts.Name = "pVideoPorts";
+            this.pVideoPorts.Size = new System.Drawing.Size(1330, 1068);
+            this.pVideoPorts.TabIndex = 18;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(1871, 1068);
+            this.Controls.Add(this.pVideoPorts);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.protectedPictureBox1);
-            this.Controls.Add(this.protectedPictureBox0);
             this.Name = "MainForm";
             this.Text = "Jevons Camera Viewer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
@@ -115,6 +109,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.protectedPictureBox0)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.protectedPictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
+            this.pVideoPorts.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -126,8 +121,7 @@
         private CameraAdjustments cameraAdjustments1;
         private CameraAdjustments cameraAdjustments2;
         private System.Windows.Forms.Panel panel1;
-        private MachineCommunications.CncSetupControl cncSetupControl1;
-        private MachineCommunications.SerialCommSetupPanel serialCommSetupPanel1;
+        private System.Windows.Forms.Panel pVideoPorts;
     }
 }
 

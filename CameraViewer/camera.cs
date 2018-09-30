@@ -396,14 +396,14 @@ namespace CameraViewer {
             if (eyeTracker.recordingPoints) {
                 Pen BlackPen = new Pen(Color.AliceBlue, 2);
                 Graphics g = Graphics.FromImage(frame);
-                System.Drawing.Point rectPoint = ScalePoints(eyeTracker.xCal, eyeTracker.yCal, Eyetracking.maxSize, Eyetracking.maxSize);
-                rectPoint.X += frame.Height/18;
-                rectPoint.Y += frame.Height / 18;
-                g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(12, 12)), 0, 360);
-                rectPoint.X += 2;
-                rectPoint.Y += 2;
+                System.Drawing.Point calibrationTarget = ScalePoints(eyeTracker.xCal, eyeTracker.yCal, Eyetracking.maxSize, Eyetracking.maxSize);
+                calibrationTarget.X += frame.Height/18;
+                calibrationTarget.Y += frame.Height / 18;
+                g.DrawArc(BlackPen, new Rectangle(calibrationTarget, new Size(12, 12)), 0, 360);
+                calibrationTarget.X += 2;
+                calibrationTarget.Y += 2;
                 BlackPen = new Pen(Color.DarkOrange, 2);
-                g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(9, 9)), 0, 360);
+                g.DrawArc(BlackPen, new Rectangle(calibrationTarget, new Size(9, 9)), 0, 360);
                 g.Dispose();
             }
             else {  // draw the location!!

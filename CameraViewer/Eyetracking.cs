@@ -186,25 +186,41 @@ namespace CameraViewer {
         }
 
         internal void GoBackOne() {
-            if (xCal == 0 && yCal == 0)
+            if (xCal == 1 && yCal == 1)
                 return;
-            if (xCal-- == 0) {
+            if (xCal-- == 1) {
                 xCal = maxSize;
-                if (yCal == 0) {
+                if (yCal == 1) {
                     return;
                 }
                 yCal--;
             }
         }
 
-        internal void RecordCalibrationPoint() {
+        /// <summary>
+        /// automatically corrects for issues in calibration points
+        /// </summary>
+        internal bool RecordCalibrationPoint() {
+            if (yCal != 1) {
+                // determine if the eye tracking point continues in the correct pattern
+                Point detectionPoint = new Point((int)eyeCam.xEyeDetection, (int)eyeCam.yEyeDetection);
+                if (detectionPoint.Y < eyeTrackingMatrix[xCal, yCal - 1].Y) {
+                    return false;
+                }
+                if (xCal != 1 && detectionPoint.X < eyeTrackingMatrix[xCal - 1, yCal].X) {
+                    return false;
+                }
+            }
+
             eyeTrackingMatrix[xCal, yCal] = new Point((int)eyeCam.xEyeDetection, (int)eyeCam.yEyeDetection);
+
             if (xCal++ == maxSize-1) {
                 xCal = 0;
                 if (yCal++ == maxSize-1) {
                     recordingPoints = false;
                 }
             }
+            return true;
         }
     }
 }

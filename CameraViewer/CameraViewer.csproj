@@ -148,11 +148,5 @@
   <ItemGroup>
     <Content Include="License-LGPL.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MachineCommunications\MachineCommunications.csproj">
-      <Project>{473bedfa-80a1-4eaf-b85a-7676bdceb4d7}</Project>
-      <Name>MachineCommunications</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

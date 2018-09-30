@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraViewer", "CameraViewer\CameraViewer.csproj", "{FA7A7F76-42D0-4F2B-B83D-F667187B7CB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MachineCommunications", "MachineCommunications\MachineCommunications.csproj", "{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileLogger", "FileLogger\FileLogger.csproj", "{CE918C0F-6150-43F1-B130-932BE30A6536}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCV64Methods", "OpenCV64Methods\OpenCV64Methods.csproj", "{F9B3BB6E-35F4-4DAC-86E8-CDE1D1171B06}"
@@ -27,14 +25,6 @@ Global
 		{FA7A7F76-42D0-4F2B-B83D-F667187B7CB7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FA7A7F76-42D0-4F2B-B83D-F667187B7CB7}.Release|x64.ActiveCfg = Release|x64
 		{FA7A7F76-42D0-4F2B-B83D-F667187B7CB7}.Release|x64.Build.0 = Release|x64
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Debug|x64.Build.0 = Debug|Any CPU
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Release|x64.ActiveCfg = Release|Any CPU
-		{473BEDFA-80A1-4EAF-B85A-7676BDCEB4D7}.Release|x64.Build.0 = Release|Any CPU
 		{CE918C0F-6150-43F1-B130-932BE30A6536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CE918C0F-6150-43F1-B130-932BE30A6536}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE918C0F-6150-43F1-B130-932BE30A6536}.Debug|x64.ActiveCfg = Debug|Any CPU

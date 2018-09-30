@@ -31,8 +31,6 @@ namespace CameraViewer {
             protectedPictureBox1.ContextMenu = cm1;
             item1.Click += new EventHandler(Cam1MakeFullScreen);
 
-            protectedPictureBox1.SendToBack();
-            protectedPictureBox0.SendToBack();
 
             // Set KeyPreview object to true to allow the form to process 
             // the key before the control with focus processes it.
@@ -41,8 +39,6 @@ namespace CameraViewer {
             // Associate the event-handling method with the
             // KeyDown event.
             this.KeyDown += new KeyEventHandler(MainForm_KeyDown);
-
-            this.cncSetupControl1.FinalizeSetup(serialCommSetupPanel1);
         }
 
         // press any key to continue
