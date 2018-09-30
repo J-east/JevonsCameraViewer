@@ -29,10 +29,16 @@
             this.cameraAdjustments2 = new CameraViewer.CameraAdjustments();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pVideoPorts = new System.Windows.Forms.Panel();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tCPProtocolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.protectedPictureBox0)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.protectedPictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.pVideoPorts.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // protectedPictureBox0
@@ -79,9 +85,9 @@
             this.panel1.Controls.Add(this.cameraAdjustments2);
             this.panel1.Controls.Add(this.cameraAdjustments1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Location = new System.Drawing.Point(0, 24);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(534, 1068);
+            this.panel1.Size = new System.Drawing.Size(534, 1044);
             this.panel1.TabIndex = 17;
             // 
             // pVideoPorts
@@ -90,10 +96,49 @@
             this.pVideoPorts.Controls.Add(this.protectedPictureBox0);
             this.pVideoPorts.Controls.Add(this.protectedPictureBox1);
             this.pVideoPorts.Dock = System.Windows.Forms.DockStyle.Right;
-            this.pVideoPorts.Location = new System.Drawing.Point(541, 0);
+            this.pVideoPorts.Location = new System.Drawing.Point(541, 24);
             this.pVideoPorts.Name = "pVideoPorts";
-            this.pVideoPorts.Size = new System.Drawing.Size(1330, 1068);
+            this.pVideoPorts.Size = new System.Drawing.Size(1330, 1044);
             this.pVideoPorts.TabIndex = 18;
+            // 
+            // menuStrip1
+            // 
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1871, 24);
+            this.menuStrip1.TabIndex = 19;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // fileToolStripMenuItem
+            // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tCPProtocolToolStripMenuItem,
+            this.loggingToolStripMenuItem,
+            this.aboutToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Text = "File";
+            // 
+            // tCPProtocolToolStripMenuItem
+            // 
+            this.tCPProtocolToolStripMenuItem.Name = "tCPProtocolToolStripMenuItem";
+            this.tCPProtocolToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.tCPProtocolToolStripMenuItem.Text = "TCP Protocol";
+            this.tCPProtocolToolStripMenuItem.Click += new System.EventHandler(this.tCPProtocolToolStripMenuItem_Click);
+            // 
+            // loggingToolStripMenuItem
+            // 
+            this.loggingToolStripMenuItem.Name = "loggingToolStripMenuItem";
+            this.loggingToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loggingToolStripMenuItem.Text = "Logging";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Text = "about";
             // 
             // MainForm
             // 
@@ -102,6 +147,8 @@
             this.ClientSize = new System.Drawing.Size(1871, 1068);
             this.Controls.Add(this.pVideoPorts);
             this.Controls.Add(this.panel1);
+            this.Controls.Add(this.menuStrip1);
+            this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Jevons Camera Viewer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
@@ -110,7 +157,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.protectedPictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
             this.pVideoPorts.ResumeLayout(false);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -122,6 +172,11 @@
         private CameraAdjustments cameraAdjustments2;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel pVideoPorts;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tCPProtocolToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loggingToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
     }
 }
 

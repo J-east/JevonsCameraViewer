@@ -150,5 +150,9 @@ namespace CameraViewer {
                     "Check the file permissions.");
             }
         }
+
+        private void tCPProtocolToolStripMenuItem_Click(object sender, EventArgs e) {
+
+        }
     }
 }
