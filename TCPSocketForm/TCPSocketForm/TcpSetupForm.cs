@@ -21,10 +21,10 @@ namespace TCPSocketForm {
         }
 
         private void TcpSetupForm_Load(object sender, EventArgs e) {
-            tbDestPort.Text = Program.Settings.TcpSettings.DestPort.ToString();
-            tbDestIpAddr.Text = Program.Settings.TcpSettings.DestIpAddr.ToString();
-            tbReceivingIpAddr.Text = Program.Settings.TcpSettings.ReceivingIpAddr.ToString();
-            tbReceivingPort.Text = Program.Settings.TcpSettings.ReceivingPort.ToString();
+            tbDestPort.Text = TcpSocketSender.Settings.TcpSettings.DestPort.ToString();
+            tbDestIpAddr.Text = TcpSocketSender.Settings.TcpSettings.DestIpAddr.ToString();
+            tbReceivingIpAddr.Text = TcpSocketSender.Settings.TcpSettings.ReceivingIpAddr.ToString();
+            tbReceivingPort.Text = TcpSocketSender.Settings.TcpSettings.ReceivingPort.ToString();
 
             this.port = int.Parse(tbDestPort.Text);
             string hostName = Dns.GetHostName();
@@ -48,44 +48,7 @@ namespace TCPSocketForm {
 
             if (tbReceivingIpAddr.Text == "1")
                 tbReceivingIpAddr.Text = this.ipAddress.ToString();
-
         }
-
-        private static async Task<string> SendRequest(string server, int port, string method, string data) {
-            try {
-                // set up IP address of server
-                IPAddress ipAddress = null;
-                IPHostEntry ipHostInfo = Dns.GetHostEntry(server);
-                for (int i = 0; i < ipHostInfo.AddressList.Length; ++i) {
-                    if (ipHostInfo.AddressList[i].AddressFamily == AddressFamily.InterNetwork) {
-                        ipAddress = ipHostInfo.AddressList[i];
-                        break;
-                    }
-                }
-                if (ipAddress == null)
-                    throw new Exception("Unable to find an IPv4 address for server");
-
-                TcpClient client = new TcpClient();
-                await client.ConnectAsync(ipAddress, port); // connect to the server
-
-                NetworkStream networkStream = client.GetStream();
-                StreamWriter writer = new StreamWriter(networkStream);
-                StreamReader reader = new StreamReader(networkStream);
-
-                writer.AutoFlush = true;
-                string requestData = "method=" + method + "&" + "data=" + data + "&eor"; // 'end-of-requet'
-                await writer.WriteLineAsync(requestData);
-                string response = await reader.ReadLineAsync();
-
-                client.Close();
-
-                return response;
-
-            }
-            catch (Exception ex) {
-                return ex.Message;
-            }
-        } // SendRequest
 
         private async void bSendTest_Click(object sender, EventArgs e) {
             try {
@@ -94,7 +57,7 @@ namespace TCPSocketForm {
                 string method = "average";
                 string data = "3 2 1 1";
 
-                Task<string> tsResponse = SendRequest(server, port, method, data);
+                Task<string> tsResponse = TcpSocketSender.SendRequest(server, port, method, data);
                 listBox1.Items.Add("Sent request, waiting for response");
                 await tsResponse;
                 double dResponse = double.Parse(tsResponse.Result);

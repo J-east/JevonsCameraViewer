@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TcpReceiver.cs" />
     <Compile Include="TcpSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -54,6 +55,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TcpSocketSender.cs" />
     <EmbeddedResource Include="TcpSetupForm.resx">
       <DependentUpon>TcpSetupForm.cs</DependentUpon>
     </EmbeddedResource>
