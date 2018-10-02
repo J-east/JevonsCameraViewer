@@ -148,5 +148,11 @@
   <ItemGroup>
     <Content Include="License-LGPL.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TCPSocketForm\TCPSocketForm\TCPSocketForm.csproj">
+      <Project>{dfe20971-83ce-46af-b44e-49dc45444b59}</Project>
+      <Name>TCPSocketForm</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

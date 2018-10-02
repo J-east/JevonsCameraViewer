@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using TCPSocketForm;
 
 namespace CameraViewer {
     public partial class MainForm : Form {
@@ -152,7 +153,8 @@ namespace CameraViewer {
         }
 
         private void tCPProtocolToolStripMenuItem_Click(object sender, EventArgs e) {
-
+            TCPSocketForm.TcpSetupForm tcp = new TcpSetupForm();
+            tcp.ShowDialog();
         }
     }
 }

@@ -39,10 +39,10 @@
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.SuspendLayout();
             // 
-            // tbIpAddr
+            // tbDestIpAddr
             // 
             this.tbDestIpAddr.Location = new System.Drawing.Point(132, 12);
-            this.tbDestIpAddr.Name = "tbIpAddr";
+            this.tbDestIpAddr.Name = "tbDestIpAddr";
             this.tbDestIpAddr.Size = new System.Drawing.Size(131, 20);
             this.tbDestIpAddr.TabIndex = 0;
             this.tbDestIpAddr.Text = "1";
@@ -117,6 +117,7 @@
             this.bCancel.TabIndex = 8;
             this.bCancel.Text = "Cancel";
             this.bCancel.UseVisualStyleBackColor = true;
+            this.bCancel.Click += new System.EventHandler(this.bCancel_Click);
             // 
             // bSave
             // 
@@ -126,6 +127,7 @@
             this.bSave.TabIndex = 9;
             this.bSave.Text = "Save";
             this.bSave.UseVisualStyleBackColor = true;
+            this.bSave.Click += new System.EventHandler(this.bSave_Click);
             // 
             // bRequestTest
             // 

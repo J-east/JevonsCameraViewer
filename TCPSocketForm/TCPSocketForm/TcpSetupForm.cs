@@ -67,5 +67,18 @@ namespace TCPSocketForm {
                 listBox1.Items.Add(ex.Message);
             }
         }
+
+        private void bCancel_Click(object sender, EventArgs e) {
+            this.Close();
+        }
+
+        private void bSave_Click(object sender, EventArgs e) {
+            TcpSocketSender.Settings.TcpSettings.DestPort = ushort.Parse(tbDestPort.Text);
+            TcpSocketSender.Settings.TcpSettings.DestIpAddr = tbDestIpAddr.Text;
+            TcpSocketSender.Settings.TcpSettings.ReceivingIpAddr = tbReceivingIpAddr.Text;
+            TcpSocketSender.Settings.TcpSettings.ReceivingPort = ushort.Parse(tbReceivingPort.Text);
+
+            this.Close();
+        }
     }
 }
