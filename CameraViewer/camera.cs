@@ -16,9 +16,14 @@ using AForge.Imaging.Filters;
 using AForge.Math.Geometry;
 using System.Threading.Tasks;
 using DirectShowLib;
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
+using Emgu.Util;
+using Emgu.CV.Cuda;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-//using OpenCV64Methods;
 
 
 namespace CameraViewer {
@@ -330,14 +335,14 @@ namespace CameraViewer {
             //}
 
             // handle fullscreen mode
-            //if (isFullScreenMode) {
-            //    try {
-            //        frame = OpenCVMethods.ResizeImage(frame, fullscreenSize);
-            //    }
-            //    catch {
-            //        frame = ResizeImageNoCuda(frame, fullscreenSize);
-            //    }
-            //}
+            if (isFullScreenMode) {
+                try {
+                    frame = ResizeImage(frame, fullscreenSize);
+                }
+                catch {
+                    frame = ResizeImageNoCuda(frame, fullscreenSize);
+                }
+            }
 
             // getting accessViolation Exceptions
             Bitmap frame2;
@@ -471,7 +476,36 @@ namespace CameraViewer {
             }
         }
 
-        
+        // uses cuda if available
+        public static Bitmap ResizeImage(Bitmap imgToResize, Size size) {
+            // emgu cuda detection can be a little finicy sometimes, but try catching cost virtually nothing compared to actually changing the size of the img  
+            if (CudaInvoke.HasCuda) {
+                try {
+                    // determine ratio between current and desired size
+
+                    double ratio = (double)size.Height / (imgToResize.Height);
+                    Mat dst = new Mat();
+                    Image<Bgr, Byte> imageCV = new Image<Bgr, byte>(imgToResize);
+                    var result = imageCV.CopyBlank();
+                    var handle = GCHandle.Alloc(result);
+                    Mat matToResize = imageCV.Mat;
+                    using (GpuMat gMatSrc = new GpuMat())
+                    using (GpuMat gMatDst = new GpuMat()) {
+                        gMatSrc.Upload(matToResize);
+                        Emgu.CV.Cuda.CudaInvoke.Resize(gMatSrc, gMatDst, new Size(0, 0), ratio, ratio, Inter.Area);
+                        gMatDst.Download(dst);
+                    }
+                    handle.Free();
+                    return dst.Bitmap;
+                }
+                catch {
+                    return ResizeImageNoCuda(imgToResize, size);
+                }
+            }
+            else {
+                return ResizeImageNoCuda(imgToResize, size);
+            }
+        }
 
         private void ZoomImg(ref Bitmap frame, double Factor) {
             if (rotateCam && (rotateAmount == 0 || rotateAmount == 2)) {
