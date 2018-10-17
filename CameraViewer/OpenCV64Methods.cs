@@ -233,7 +233,7 @@ namespace CameraViewer {
         int frameReduction = 2;
         public List<string[]> lst_measures_flow = new List<string[]>();
         // calculates the optical flow according to the Farneback algorithm 
-        public Bitmap Dense_Optical_Flow(Bitmap bmp, OpticalFlowVariable optiVariables, Camera cam) {
+        public Bitmap Dense_Optical_Flow(Bitmap bmp, OpticalFlowVariable optiVariables) {
             frameReduction = optiVariables.frameReduction < 1 ? 1 : optiVariables.frameReduction;
             // frame becomes previous frame (i.e., prev_frame stores information about current frame)
             prev_frame = matframe;

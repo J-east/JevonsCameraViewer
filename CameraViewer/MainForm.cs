@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using TCPSocketForm;
+using EyeTracking;
 
 namespace CameraViewer {
     public partial class MainForm : Form {
@@ -132,9 +133,6 @@ namespace CameraViewer {
 
             Camera1 = new Camera(this, cameraAdjustments1, eyeTracker);
             Camera2 = new Camera(this, cameraAdjustments1, eyeTracker);
-
-            eyeTracker.tempCam1 = Camera1;
-            eyeTracker.tempCam2 = Camera2;
 
             Camera1.ImageBox = protectedPictureBox0;
             Camera2.ImageBox = protectedPictureBox1;

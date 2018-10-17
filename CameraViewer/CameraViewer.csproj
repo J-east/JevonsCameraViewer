@@ -114,7 +114,6 @@
     <Compile Include="CameraAdjustments.Designer.cs">
       <DependentUpon>CameraAdjustments.cs</DependentUpon>
     </Compile>
-    <Compile Include="Eyetracking.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -160,6 +159,14 @@
     <Content Include="License-LGPL.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EyeTracking\EyeTracking.csproj">
+      <Project>{f7066405-403e-4083-821c-6ce18b9029a8}</Project>
+      <Name>EyeTracking</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FileLogger\FileLogger.csproj">
+      <Project>{ce918c0f-6150-43f1-b130-932be30a6536}</Project>
+      <Name>FileLogger</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TCPSocketForm\TCPSocketForm\TCPSocketForm.csproj">
       <Project>{dfe20971-83ce-46af-b44e-49dc45444b59}</Project>
       <Name>TCPSocketForm</Name>

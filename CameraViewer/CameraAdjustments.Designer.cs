@@ -55,7 +55,7 @@
             this.cbRotate = new System.Windows.Forms.CheckBox();
             this.trackBarExposure = new System.Windows.Forms.TrackBar();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
-            this.XCam_comboBox = new System.Windows.Forms.ComboBox();
+            this.cbCamSelection = new System.Windows.Forms.ComboBox();
             this.XCamStatus_label = new System.Windows.Forms.Label();
             this.xCamSelect = new System.Windows.Forms.Button();
             this.lblFrameDelay1 = new System.Windows.Forms.Label();
@@ -69,6 +69,7 @@
             this.lblEyeTrackingInfo = new System.Windows.Forms.Label();
             this.bInitialize = new System.Windows.Forms.Button();
             this.cbEyeTracking = new System.Windows.Forms.CheckBox();
+            this.lblEyetracking = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label18 = new System.Windows.Forms.Label();
@@ -531,14 +532,14 @@
             // 
             // XCam_comboBox
             // 
-            this.XCam_comboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.XCam_comboBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.XCam_comboBox.FormattingEnabled = true;
-            this.XCam_comboBox.Location = new System.Drawing.Point(3, 8);
-            this.XCam_comboBox.Name = "XCam_comboBox";
-            this.XCam_comboBox.Size = new System.Drawing.Size(160, 21);
-            this.XCam_comboBox.TabIndex = 5;
-            this.XCam_comboBox.SelectedIndexChanged += new System.EventHandler(this.XCam_comboBox_SelectedIndexChanged);
+            this.cbCamSelection.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbCamSelection.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbCamSelection.FormattingEnabled = true;
+            this.cbCamSelection.Location = new System.Drawing.Point(3, 8);
+            this.cbCamSelection.Name = "XCam_comboBox";
+            this.cbCamSelection.Size = new System.Drawing.Size(160, 21);
+            this.cbCamSelection.TabIndex = 5;
+            this.cbCamSelection.SelectedIndexChanged += new System.EventHandler(this.XCam_comboBox_SelectedIndexChanged);
             // 
             // XCamStatus_label
             // 
@@ -604,6 +605,7 @@
             this.panel2.Controls.Add(this.lblEyeTrackingInfo);
             this.panel2.Controls.Add(this.bInitialize);
             this.panel2.Controls.Add(this.cbEyeTracking);
+            this.panel2.Controls.Add(this.lblEyetracking);
             this.panel2.Controls.Add(this.label19);
             this.panel2.Controls.Add(this.numericUpDown1);
             this.panel2.Controls.Add(this.label18);
@@ -697,13 +699,23 @@
             // cbEyeTracking
             // 
             this.cbEyeTracking.AutoSize = true;
-            this.cbEyeTracking.Location = new System.Drawing.Point(0, 396);
+            this.cbEyeTracking.Location = new System.Drawing.Point(6, 396);
             this.cbEyeTracking.Name = "cbEyeTracking";
             this.cbEyeTracking.Size = new System.Drawing.Size(125, 17);
             this.cbEyeTracking.TabIndex = 29;
             this.cbEyeTracking.Text = "Eye Tracking Enable";
             this.cbEyeTracking.UseVisualStyleBackColor = true;
             this.cbEyeTracking.CheckedChanged += new System.EventHandler(this.cbEyeTracking_CheckedChanged);
+            //
+            // lblEyeTracking
+            //
+            this.lblEyetracking.AutoSize = true;
+            this.lblEyetracking.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblEyetracking.Location = new System.Drawing.Point(2, 379);
+            this.lblEyetracking.Name = "lblEyetracking";
+            this.lblEyetracking.Size = new System.Drawing.Size(121, 13);
+            this.lblEyetracking.TabIndex = 25;
+            this.lblEyetracking.Text = "Eyetracking";
             // 
             // label19
             // 
@@ -794,7 +806,7 @@
             // cbVisualFlow
             // 
             this.cbVisualFlow.AutoSize = true;
-            this.cbVisualFlow.Location = new System.Drawing.Point(0, 286);
+            this.cbVisualFlow.Location = new System.Drawing.Point(6, 286);
             this.cbVisualFlow.Name = "cbVisualFlow";
             this.cbVisualFlow.Size = new System.Drawing.Size(79, 17);
             this.cbVisualFlow.TabIndex = 22;
@@ -1191,7 +1203,7 @@
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.XCam_comboBox);
+            this.Controls.Add(this.cbCamSelection);
             this.Controls.Add(this.xCamSelect);
             this.Controls.Add(this.XCamStatus_label);
             this.Controls.Add(this.panel1);
@@ -1256,7 +1268,7 @@
         private System.Windows.Forms.Label lblFrameRate;
         private System.Windows.Forms.TrackBar trackBar1;
 
-        private System.Windows.Forms.ComboBox XCam_comboBox;
+        private System.Windows.Forms.ComboBox cbCamSelection;
         public System.Windows.Forms.Label XCamStatus_label;
         private System.Windows.Forms.Button xCamSelect;
         private System.Windows.Forms.Label lblFrameDelay1;
@@ -1293,6 +1305,7 @@
         private System.Windows.Forms.NumericUpDown numericUpDown1;
         private System.Windows.Forms.Button bInitialize;
         private System.Windows.Forms.CheckBox cbEyeTracking;
+        private System.Windows.Forms.Label lblEyetracking;
         private System.Windows.Forms.Label lblEyeTrackingInfo;
         private System.Windows.Forms.Label lblInitializeStatus;
         private System.Windows.Forms.CheckBox cbIsEyeCam;

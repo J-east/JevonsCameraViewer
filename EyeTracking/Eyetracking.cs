@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CameraViewer {
+namespace EyeTracking {
     public class Eyetracking {
         public static int maxSize { get; } = 10;
         public Point[,] eyeTrackingMatrix = new Point[maxSize, maxSize];
@@ -18,28 +18,13 @@ namespace CameraViewer {
         public int rectX = 700;
         public int rectY = 130;
         public int rectHeight = 350;
-        public int rectWidth = 250;        
-
-        public Camera tempCam1;
-        public Camera tempCam2;
-
-        Camera eyeCam;
-        Camera frontCam;
+        public int rectWidth = 250;
 
         public bool recordingPoints { get; private set; }
         public bool isActive { get; private set; }
 
-        internal void SetCameraPosition(Camera eyeTrackingCam) {
-            eyeCam = eyeTrackingCam;
-            eyeCam.isEyeCamera = true;
-            if (tempCam1 == eyeTrackingCam) {
-                frontCam = tempCam2;
-            }
-            else {
-                frontCam = tempCam1;
-            }
-            frontCam.isEyeCamera = false;
-        }
+        public double xEyeDetection { get; set; }
+        public double yEyeDetection { get; set; }
 
         private double _trackedXval, _trackedYval;
         public double TrackedXVal {
@@ -48,15 +33,15 @@ namespace CameraViewer {
                 // the calibration points line up with a grid of (at this time) 10x10 points
                 // we will return a value between 0 and 10, basically interpolated between the two X points for the given y value
                 try {
-                    Tuple<int, double> point = GetNearestPoint(new Point((int)eyeCam.xEyeDetection, (int)eyeCam.yEyeDetection), ConvertMatrixToList(eyeTrackingMatrix));
+                    Tuple<int, double> point = GetNearestPoint(new Point((int)xEyeDetection, (int)yEyeDetection), ConvertMatrixToList(eyeTrackingMatrix));
                     Point closestPoint = new Point(point.Item1 % 10, point.Item1 / 10);
                     // now that we have the closest point we can interpolate
-                    if (eyeCam.xEyeDetection > eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X) {   // x is greater than the closest point, means we need interpolate between this and the lower point
-                        if (eyeCam.yEyeDetection > eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y) {
+                    if (xEyeDetection > eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X) {   // x is greater than the closest point, means we need interpolate between this and the lower point
+                        if (yEyeDetection > eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y) {
                             if (closestPoint.X >= 1 && closestPoint.Y >= 1) {
-                                _trackedXval = Math.Abs(linear(eyeCam.xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
+                                _trackedXval = Math.Abs(linear(xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].X, closestPoint.X, closestPoint.X - 1));
-                                _trackedYval = Math.Abs(linear(eyeCam.yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
+                                _trackedYval = Math.Abs(linear(yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].Y, closestPoint.Y, closestPoint.Y - 1));
                             }
                             else {
@@ -66,9 +51,9 @@ namespace CameraViewer {
                         }
                         else {
                             if (closestPoint.X >= 1 && closestPoint.Y <= Eyetracking.maxSize - 2) {
-                                _trackedXval = Math.Abs(linear(eyeCam.xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
+                                _trackedXval = Math.Abs(linear(xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].X, closestPoint.X, closestPoint.X - 1));
-                                _trackedYval = Math.Abs(linear(eyeCam.yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
+                                _trackedYval = Math.Abs(linear(yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].Y, closestPoint.Y, closestPoint.Y - 1));
                             }
                             else {
@@ -78,11 +63,11 @@ namespace CameraViewer {
                         }
                     }
                     else {
-                        if (eyeCam.yEyeDetection > eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y) {
+                        if (yEyeDetection > eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y) {
                             if (closestPoint.X <= Eyetracking.maxSize - 2 && closestPoint.Y >= 1) {
-                                _trackedXval = Math.Abs(linear(eyeCam.xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
+                                _trackedXval = Math.Abs(linear(xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].X, closestPoint.X, closestPoint.X - 1));
-                                _trackedYval = Math.Abs(linear(eyeCam.yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
+                                _trackedYval = Math.Abs(linear(yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].Y, closestPoint.Y, closestPoint.Y - 1));
                             }
                             else {
@@ -92,9 +77,9 @@ namespace CameraViewer {
                         }
                         else {
                             if (closestPoint.X <= Eyetracking.maxSize - 2 && closestPoint.Y <= Eyetracking.maxSize - 2) {
-                                _trackedXval = Math.Abs(linear(eyeCam.xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
+                                _trackedXval = Math.Abs(linear(xEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].X,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].X, closestPoint.X, closestPoint.X - 1));
-                                _trackedYval = Math.Abs(linear(eyeCam.yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
+                                _trackedYval = Math.Abs(linear(yEyeDetection, eyeTrackingMatrix[closestPoint.X, closestPoint.Y].Y,
                                     eyeTrackingMatrix[closestPoint.X - 1, closestPoint.Y - 1].Y, closestPoint.Y, closestPoint.Y - 1));
                             }
                             else {
@@ -171,11 +156,8 @@ namespace CameraViewer {
         /// </summary>
 
 
-        internal bool Initialize(bool forceReInit = false) {
+        public bool Initialize(bool forceReInit = false) {
             if (!recordingPoints || forceReInit) {
-                if (eyeCam == null)
-                    return false;
-
                 xCal = 0;
                 yCal = 0;
 
@@ -200,10 +182,10 @@ namespace CameraViewer {
         /// <summary>
         /// automatically corrects for issues in calibration points
         /// </summary>
-        internal bool RecordCalibrationPoint() {
+        public bool RecordCalibrationPoint() {
             if (yCal != 1) {
                 // determine if the eye tracking point continues in the correct pattern
-                Point detectionPoint = new Point((int)eyeCam.xEyeDetection, (int)eyeCam.yEyeDetection);
+                Point detectionPoint = new Point((int)xEyeDetection, (int)yEyeDetection);
                 if (detectionPoint.Y < eyeTrackingMatrix[xCal, yCal - 1].Y) {
                     return false;
                 }
@@ -212,11 +194,11 @@ namespace CameraViewer {
                 }
             }
 
-            eyeTrackingMatrix[xCal, yCal] = new Point((int)eyeCam.xEyeDetection, (int)eyeCam.yEyeDetection);
+            eyeTrackingMatrix[xCal, yCal] = new Point((int)xEyeDetection, (int)yEyeDetection);
 
-            if (xCal++ == maxSize-1) {
+            if (xCal++ == maxSize - 1) {
                 xCal = 0;
-                if (yCal++ == maxSize-1) {
+                if (yCal++ == maxSize - 1) {
                     recordingPoints = false;
                 }
             }

@@ -24,14 +24,14 @@ using Emgu.Util;
 using Emgu.CV.Cuda;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-
+using EyeTracking;
 
 namespace CameraViewer {
     public class Camera {
         public VideoCaptureDevice VideoSource = null;
         private MainForm MainForm;
         private CameraAdjustments cameraAdjustments;
-        //OpenCVMethods openCVMethods = new OpenCVMethods();
+        OpenCVMethods openCVMethods = new OpenCVMethods();
 
         public bool isFullScreenMode = false;
         public Size fullscreenSize = new Size(1920, 1080);
@@ -39,8 +39,8 @@ namespace CameraViewer {
         public bool rotateCam = false;
         public int rotateAmount = 1;
 
-        //public ShapeDetectionVariables ShapeVariables = new ShapeDetectionVariables();
-        //public OpticalFlowVariable optiVariables = new OpticalFlowVariable();
+        public ShapeDetectionVariables ShapeVariables = new ShapeDetectionVariables();
+        public OpticalFlowVariable optiVariables = new OpticalFlowVariable();
 
         public Eyetracking eyeTracker;
 
@@ -327,12 +327,12 @@ namespace CameraViewer {
             }
 
             // send to openCV for additional stuff
-            //if (!(!ShapeVariables.calcCircles && !ShapeVariables.calcLines && !ShapeVariables.calcRectTri))
-            //    frame = OpenCVMethods.PerformShapeDetection(frame, ShapeVariables);
+            if (!(!ShapeVariables.calcCircles && !ShapeVariables.calcLines && !ShapeVariables.calcRectTri))
+                frame = OpenCVMethods.PerformShapeDetection(frame, ShapeVariables);
 
-            //if (optiVariables.calcOpticalFlow) {
-            //    frame = openCVMethods.Dense_Optical_Flow(frame, optiVariables);
-            //}
+            if (optiVariables.calcOpticalFlow) {
+                frame = openCVMethods.Dense_Optical_Flow(frame, optiVariables);
+            }
 
             // handle fullscreen mode
             if (isFullScreenMode) {

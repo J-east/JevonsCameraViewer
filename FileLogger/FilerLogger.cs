@@ -27,7 +27,6 @@ namespace FileLogger {
             }
         }
 
-        #region "Private variables"
         static string LogFileName = "logs.";
         static bool isVerboseMode;
         static string LogFilePath;
@@ -35,7 +34,6 @@ namespace FileLogger {
         static StreamWriter ofileWrite;
         static ConcurrentQueue<LogDetail> _LogsQ;
         static bool runLogging;
-        #endregion
 
         static verbosityLevel currentLevel { get; set; } = verbosityLevel.notVerbose;
 

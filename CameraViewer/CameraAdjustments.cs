@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using DirectShowLib;
 using System.Threading;
+using EyeTracking;
 
 namespace CameraViewer {
     public partial class CameraAdjustments : UserControl {
@@ -46,6 +47,26 @@ namespace CameraViewer {
                 nThreashold.Value = Program.Settings.Cam1.ThresholdVal;
                 nZoom.Value = Program.Settings.Cam1.ZoomVal;
                 lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam1.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam1.SaveLocation.Length < 50 ? 0 : Program.Settings.Cam1.SaveLocation.Length - 50);
+
+                // I don't want to see anything related to eyetracking
+                nEyeTrackingTuningX.Visible = false;
+                label23.Visible = false;
+                label22.Visible = false;
+                label21.Visible = false;
+                label20.Visible = false;
+                tbEyeSX.Visible = false;
+                tbEyeRectY.Visible = false;
+                tbEyeRectX.Visible = false;
+                tbEyeSY.Visible = false;
+                nEyeTrackingTuningY.Visible = false;
+                cbEyeTracking.Visible = false;
+                bInitialize.Visible = false;
+                bReset.Visible = false;
+                lblInitializeStatus.Visible = false;
+                lblEyeTrackingInfo.Visible = false;
+                cbIsEyeCam.Visible = false;
+                bGoBack.Visible = false;
+                lblEyetracking.Visible = false;
             }
             else {
                 cbRotate.Checked = Program.Settings.Cam2.CamRotate;
@@ -84,59 +105,58 @@ namespace CameraViewer {
         // get the devices         
         private void GetCamList() {
             List<string> Devices = camera.GetDeviceList();
-            XCam_comboBox.Items.Clear();
+            cbCamSelection.Items.Clear();
             if (Devices.Count != 0) {
                 for (int i = 0; i < Devices.Count; i++) {
-                    XCam_comboBox.Items.Add(i.ToString() + ": " + Devices[i]);
+                    cbCamSelection.Items.Add(i.ToString() + ": " + Devices[i]);
                 }
             }
             else {
-                XCam_comboBox.Items.Add("----");
+                cbCamSelection.Items.Add("----");
                 XCamStatus_label.Text = "No Cam";
             }
             if (xCamera) {
                 if ((Devices.Count > Program.Settings.Cam1.CamIndex) && (Program.Settings.Cam1.CamIndex > 0)) {
-                    XCam_comboBox.SelectedIndex = Program.Settings.Cam1.CamIndex;
+                    cbCamSelection.SelectedIndex = Program.Settings.Cam1.CamIndex;
                 }
                 else {
-                    XCam_comboBox.SelectedIndex = 0;  
+                    cbCamSelection.SelectedIndex = 0;
                 }
             }
             else {
                 if ((Devices.Count > Program.Settings.Cam2.CamIndex) && (Program.Settings.Cam2.CamIndex > 0)) {
-                    XCam_comboBox.SelectedIndex = Program.Settings.Cam2.CamIndex;
+                    cbCamSelection.SelectedIndex = Program.Settings.Cam2.CamIndex;
                 }
                 else {
-                    XCam_comboBox.SelectedIndex = 0;  
+                    cbCamSelection.SelectedIndex = 0;
                 }
             }
         }
 
         private void xCamSelect_Click(object sender, EventArgs e) {
-            Program.Settings.Cam1.CamIndex = XCam_comboBox.SelectedIndex;
-
             while (camera.Active) {
                 camera.SignalToStop();
                 Thread.Sleep(50);
                 camera.Active = false;
             }
 
-
             List<string> Monikers = camera.GetMonikerStrings();
             if (xCamera) {
-                Program.Settings.Cam1.CamMoniker = Monikers[XCam_comboBox.SelectedIndex];
+                Program.Settings.Cam1.CamIndex = cbCamSelection.SelectedIndex;
+                Program.Settings.Cam1.CamMoniker = Monikers[cbCamSelection.SelectedIndex];
                 AppSettings<Program.MySettings>.Save(Program.Settings);
             }
             else {
-                Program.Settings.Cam2.CamMoniker = Monikers[XCam_comboBox.SelectedIndex];
+                Program.Settings.Cam2.CamIndex = cbCamSelection.SelectedIndex;
+                Program.Settings.Cam2.CamMoniker = Monikers[cbCamSelection.SelectedIndex];
                 AppSettings<Program.MySettings>.Save(Program.Settings);
             }
 
-            camera.MonikerString = Monikers[XCam_comboBox.SelectedIndex];
+            camera.MonikerString = Monikers[cbCamSelection.SelectedIndex];
 
             camera.Active = true;
 
-            camera.Start("DownCamera", Monikers[XCam_comboBox.SelectedIndex]);
+            camera.Start("DownCamera", Monikers[cbCamSelection.SelectedIndex]);
 
             if (!camera.ReceivingFrames) {
                 MessageBox.Show("Camera being used by another process");
@@ -377,63 +397,63 @@ namespace CameraViewer {
         }
 
         private void cbLineDetection_CheckedChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.calcLines = cbLineDetection.Checked;
+            camera.ShapeVariables.calcLines = cbLineDetection.Checked;
         }
 
         private void cbCircleDetection_CheckedChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.calcCircles = cbCircleDetection.Checked;
+            camera.ShapeVariables.calcCircles = cbCircleDetection.Checked;
         }
 
         private void cbRectangleTriDetection_CheckedChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.calcRectTri = cbRectangleTriDetection.Checked;
+            camera.ShapeVariables.calcRectTri = cbRectangleTriDetection.Checked;
         }
 
         private void nlineCanny_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.lineCannyThreshold = (double)nlineCanny.Value;
+            camera.ShapeVariables.lineCannyThreshold = (double)nlineCanny.Value;
         }
 
         private void nLineThreashold_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.lineThreshold = (int)nLineThreashold.Value;
+            camera.ShapeVariables.lineThreshold = (int)nLineThreashold.Value;
         }
 
         private void nThresholdLinking_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.cannyThresholdLinking = (double)nThresholdLinking.Value;
+            camera.ShapeVariables.cannyThresholdLinking = (double)nThresholdLinking.Value;
         }
 
         private void nMinLineWidth_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.minLineWidth = (double)nMinLineWidth.Value;
+            camera.ShapeVariables.minLineWidth = (double)nMinLineWidth.Value;
         }
 
         private void nMinRadius_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.minradius = (int)nMinRadius.Value;
+            camera.ShapeVariables.minradius = (int)nMinRadius.Value;
         }
 
         private void nMaxRadius_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.maxRadius = (int)nMaxRadius.Value;
+            camera.ShapeVariables.maxRadius = (int)nMaxRadius.Value;
         }
 
         private void nCircleCanny_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.circleCannyThreshold = (int)nCircleCanny.Value;
+            camera.ShapeVariables.circleCannyThreshold = (int)nCircleCanny.Value;
         }
 
         private void nCircleAccumulator_ValueChanged(object sender, EventArgs e) {
-            //camera.ShapeVariables.circleAccumulatorThreshold = (int)nCircleAccumulator.Value;
+            camera.ShapeVariables.circleAccumulatorThreshold = (int)nCircleAccumulator.Value;
         }
 
         private void cbVisualFlow_CheckedChanged(object sender, EventArgs e) {
-            //camera.optiVariables.calcOpticalFlow = cbVisualFlow.Checked;
+            camera.optiVariables.calcOpticalFlow = cbVisualFlow.Checked;
         }
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e) {
-            //camera.optiVariables.stepRate = (int)nFlowDensity.Value;
+            camera.optiVariables.stepRate = (int)nFlowDensity.Value;
         }
 
         private void numericUpDown2_ValueChanged(object sender, EventArgs e) {
-            //camera.optiVariables.frameReduction = (int)((int)nResolutionReduction.Value % 2 == 1 ? nResolutionReduction.Value - 1 : nResolutionReduction.Value);
+            camera.optiVariables.frameReduction = (int)((int)nResolutionReduction.Value % 2 == 1 ? nResolutionReduction.Value - 1 : nResolutionReduction.Value);
         }
 
         private void numericUpDown1_ValueChanged_1(object sender, EventArgs e) {
-            //camera.optiVariables.shiftThatCounts = (int)numericUpDown1.Value;
+            camera.optiVariables.shiftThatCounts = (int)numericUpDown1.Value;
         }
 
         private void cbEyeTracking_CheckedChanged(object sender, EventArgs e) {
@@ -446,11 +466,10 @@ namespace CameraViewer {
                 MessageBox.Show("please set eye tracking camera");
                 return;
             }
-
         }
 
         private void cbIsEyeCam_CheckedChanged(object sender, EventArgs e) {
-            camera.eyeTracker.SetCameraPosition(camera);
+            camera.isEyeCamera = cbIsEyeCam.Checked;
         }
 
         private void bReset_Click(object sender, EventArgs e) {
@@ -495,11 +514,11 @@ namespace CameraViewer {
 
         private void XCam_comboBox_SelectedIndexChanged(object sender, EventArgs e) {
             if (xCamera) {
-                Program.Settings.Cam1.CamIndex = XCam_comboBox.SelectedIndex;
+                Program.Settings.Cam1.CamIndex = cbCamSelection.SelectedIndex;
                 AppSettings<Program.MySettings>.Save(Program.Settings);
             }
             else {
-                Program.Settings.Cam2.CamIndex = XCam_comboBox.SelectedIndex;
+                Program.Settings.Cam2.CamIndex = cbCamSelection.SelectedIndex;
                 AppSettings<Program.MySettings>.Save(Program.Settings);
             }
 
