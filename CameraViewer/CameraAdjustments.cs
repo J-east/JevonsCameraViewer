@@ -87,6 +87,8 @@ namespace CameraViewer {
                 nZoom.Value = Program.Settings.Cam2.ZoomVal;
 
                 lblSaveFileLocation.Text = string.IsNullOrWhiteSpace(Program.Settings.Cam2.SaveLocation) ? "Save Location..." : Program.Settings.Cam1.SaveLocation.Substring(Program.Settings.Cam2.SaveLocation.Length < 50 ? 0 : Program.Settings.Cam2.SaveLocation.Length - 50);
+
+                camera.isEyeCamera = true;
             }
         }
 
@@ -462,10 +464,7 @@ namespace CameraViewer {
 
         // start the initialization
         private void bInitialize_Click(object sender, EventArgs e) {
-            if (!camera.eyeTracker.Initialize()) {
-                MessageBox.Show("please set eye tracking camera");
-                return;
-            }
+            camera.eyeTracker.Initialize();             
         }
 
         private void cbIsEyeCam_CheckedChanged(object sender, EventArgs e) {
@@ -474,6 +473,10 @@ namespace CameraViewer {
 
         private void bReset_Click(object sender, EventArgs e) {
             camera.eyeTracker.Initialize(true);
+        }
+
+        private void bUndo_Click(object sender, EventArgs e) {
+            camera.eyeTracker.GoBackOne();
         }
 
         private void cbR_CheckedChanged(object sender, EventArgs e) {

@@ -9,7 +9,7 @@ namespace FileLogger {
         notVerbose = 0x01,
         verbose = 0x02,
         veryVerbose = 0x04,
-        all = 0x08
+        all = 0x07
     };
 
     public static class FileLogger {
@@ -34,6 +34,7 @@ namespace FileLogger {
         static StreamWriter ofileWrite;
         static ConcurrentQueue<LogDetail> _LogsQ;
         static bool runLogging;
+
 
         static verbosityLevel currentLevel { get; set; } = verbosityLevel.notVerbose;
 

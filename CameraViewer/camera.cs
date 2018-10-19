@@ -381,6 +381,9 @@ namespace CameraViewer {
                 xEyeDetection = retVal.Item1;
                 yEyeDetection = retVal.Item2;
 
+                eyeTracker.xEyeDetection = xEyeDetection;
+                eyeTracker.yEyeDetection = yEyeDetection;
+
                 Pen GPen = new Pen(Color.LawnGreen, 1);
                 Graphics g = Graphics.FromImage(frame);
                 // now draw the current locations on the frame
@@ -620,14 +623,40 @@ namespace CameraViewer {
         private void GrayscaleImg(ref Bitmap frame, bool R, bool G, bool B) {
             // create filter
             Bitmap fr;
-            if (!(!R && !G && !B) && (!R || !G || !B)) {
+
+            // if you select a single color, attempt to filter out low saturation as well
+            if (G && !R && !B) {
                 EuclideanColorFiltering filter = new EuclideanColorFiltering();
                 // set center colol and radius
                 filter.CenterColor = new AForge.Imaging.RGB(Color.FromArgb(30, 200, 30));
                 filter.Radius = 150;
                 // apply the filter
                 filter.ApplyInPlace(frame);
-                Grayscale toGrFilter = new Grayscale(R ? 0.3 : 0, G ? .9 : 0, B ? 0.3 : 0);
+                Grayscale toGrFilter = new Grayscale( 0, .9, 0);
+                fr = toGrFilter.Apply(frame);
+                GrayscaleToRGB toColFilter = new GrayscaleToRGB();
+                frame = toColFilter.Apply(fr);
+            }        
+            else if (R && !G && !B) {
+                EuclideanColorFiltering filter = new EuclideanColorFiltering();
+                // set center colol and radius
+                filter.CenterColor = new AForge.Imaging.RGB(Color.FromArgb(200, 25, 25));
+                filter.Radius = 150;
+                // apply the filter
+                filter.ApplyInPlace(frame);
+                Grayscale toGrFilter = new Grayscale(0.9, 0, 0);
+                fr = toGrFilter.Apply(frame);
+                GrayscaleToRGB toColFilter = new GrayscaleToRGB();
+                frame = toColFilter.Apply(fr);
+            }
+            else if (!R && !G && B) {
+                EuclideanColorFiltering filter = new EuclideanColorFiltering();
+                // set center colol and radius
+                filter.CenterColor = new AForge.Imaging.RGB(Color.FromArgb(30, 30, 200));
+                filter.Radius = 150;
+                // apply the filter
+                filter.ApplyInPlace(frame);
+                Grayscale toGrFilter = new Grayscale(0, 0, .9);
                 fr = toGrFilter.Apply(frame);
                 GrayscaleToRGB toColFilter = new GrayscaleToRGB();
                 frame = toColFilter.Apply(fr);

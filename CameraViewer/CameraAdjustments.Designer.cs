@@ -646,6 +646,7 @@
             this.bGoBack.TabIndex = 42;
             this.bGoBack.Text = "Undo Last";
             this.bGoBack.UseVisualStyleBackColor = true;
+            this.bGoBack.Click += new System.EventHandler(this.bUndo_Click);
             // 
             // bReset
             // 
@@ -656,17 +657,6 @@
             this.bReset.Text = "Reset Initialize";
             this.bReset.UseVisualStyleBackColor = true;
             this.bReset.Click += new System.EventHandler(this.bReset_Click);
-            // 
-            // cbIsEyeCam
-            // 
-            this.cbIsEyeCam.AutoSize = true;
-            this.cbIsEyeCam.Location = new System.Drawing.Point(14, 505);
-            this.cbIsEyeCam.Name = "cbIsEyeCam";
-            this.cbIsEyeCam.Size = new System.Drawing.Size(128, 17);
-            this.cbIsEyeCam.TabIndex = 40;
-            this.cbIsEyeCam.Text = "Eye Tracking Camera";
-            this.cbIsEyeCam.UseVisualStyleBackColor = true;
-            this.cbIsEyeCam.CheckedChanged += new System.EventHandler(this.cbIsEyeCam_CheckedChanged);
             // 
             // lblInitializeStatus
             // 

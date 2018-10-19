@@ -156,18 +156,17 @@ namespace EyeTracking {
         /// </summary>
 
 
-        public bool Initialize(bool forceReInit = false) {
+        public void Initialize(bool forceReInit = false) {
             if (!recordingPoints || forceReInit) {
-                xCal = 0;
-                yCal = 0;
+                xCal = 1;
+                yCal = 1;
 
                 recordingPoints = true;
                 isActive = true;
             }
-            return true;
         }
 
-        internal void GoBackOne() {
+        public void GoBackOne() {
             if (xCal == 1 && yCal == 1)
                 return;
             if (xCal-- == 1) {
@@ -183,7 +182,7 @@ namespace EyeTracking {
         /// automatically corrects for issues in calibration points
         /// </summary>
         public bool RecordCalibrationPoint() {
-            if (yCal != 1) {
+            if (yCal > 1) {
                 // determine if the eye tracking point continues in the correct pattern
                 Point detectionPoint = new Point((int)xEyeDetection, (int)yEyeDetection);
                 if (detectionPoint.Y < eyeTrackingMatrix[xCal, yCal - 1].Y) {
@@ -197,7 +196,7 @@ namespace EyeTracking {
             eyeTrackingMatrix[xCal, yCal] = new Point((int)xEyeDetection, (int)yEyeDetection);
 
             if (xCal++ == maxSize - 1) {
-                xCal = 0;
+                xCal = 1;
                 if (yCal++ == maxSize - 1) {
                     recordingPoints = false;
                 }
