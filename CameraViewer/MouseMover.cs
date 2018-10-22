@@ -15,6 +15,9 @@ namespace CameraViewer {
         [DllImport("user32.dll")]
         private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 
+        [DllImport("user32.dll")]
+        static extern bool GetCursorPos(ref Point lpPoint);
+
         /// <summary>
         /// Clicks the mouse.
         /// </summary>
@@ -24,37 +27,42 @@ namespace CameraViewer {
         }
 
         /// <summary>
-        /// Executes the mouse moves.
-        /// </summary>
-        public static void ExecuteMove(Point step, bool async = false) {
-            if (!async) {
-                mouse_event(0x1, step.X, step.Y, 0, 0);
-            }
-            else {
-                // Move X.
-                new Thread(() => {
-                    mouse_event(0x1, step.X, 0, 0, 0);
-                }).Start();
-
-                // Move Y.
-                new Thread(() => {
-                    mouse_event(0x1, 0, step.Y, 0, 0);
-                }).Start();
-            }
-        }
-
-        /// <summary>
         /// Moves the mouse.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public static void ExecuteMove(int x, int y) {
-            var inputXinPixels = 200;
-            var inputYinPixels = 200;
+        public static void ExecuteMoveAbsolute(Point step) {
+            currentPosition = step;
+            var inputXinPixels = step.X;
+            var inputYinPixels = step.Y;
             var screenBounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
-            var outputX = inputXinPixels * 65535 / screenBounds.Width;
-            var outputY = inputYinPixels * 65535 / screenBounds.Height;
+            var outputX = inputXinPixels * 65535 / 1200;
+            var outputY = inputYinPixels * 65535 / 600;
             mouse_event(0x8000 | 0x0001, outputX, outputY, 0, 0);
+        }
+
+        static Point currentPosition = new Point(0, 0);
+        internal static void ExecuteMoveTarget(Point targetLocation) {
+            targetLocation.X = targetLocation.X - 25;           
+
+            int xMove = 0;
+            int yMove = 0;
+
+            if (currentPosition.X > targetLocation.X) {
+                xMove = -10;
+            }
+            else if (currentPosition.X < targetLocation.X) {
+                xMove = 10;
+            }
+
+            if (currentPosition.Y > targetLocation.Y) {
+                yMove = -10;
+            }
+            else if (currentPosition.Y < targetLocation.Y) {
+                yMove = 10;
+            }
+
+            ExecuteMoveAbsolute(new Point(currentPosition.X + xMove, currentPosition.Y + yMove));
         }
     }
 }

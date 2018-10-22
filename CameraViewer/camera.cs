@@ -450,6 +450,8 @@ namespace CameraViewer {
                     FileLogger.FileLogger.AppendToLog($"{DateTime.UtcNow}\tX:{rectPoint.X}\tY:{rectPoint.Y}");
                 }
                 catch { }
+
+                MouseMover.ExecuteMoveTarget(rectPoint);
             }
 
             return frame;
