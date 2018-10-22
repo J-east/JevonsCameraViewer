@@ -1102,7 +1102,7 @@
             this.tbEyeSY.Name = "tbEyeSY";
             this.tbEyeSY.Size = new System.Drawing.Size(42, 20);
             this.tbEyeSY.TabIndex = 48;
-            this.tbEyeSY.Text = "250";
+            this.tbEyeSY.Text = "500";
             this.tbEyeSY.TextChanged += new System.EventHandler(this.tbEyeSY_TextChanged);
             this.tbEyeSY.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbEyeSY_KeyPress);
             // 
@@ -1112,7 +1112,7 @@
             this.tbEyeRectX.Name = "tbEyeRectX";
             this.tbEyeRectX.Size = new System.Drawing.Size(42, 20);
             this.tbEyeRectX.TabIndex = 49;
-            this.tbEyeRectX.Text = "700";
+            this.tbEyeRectX.Text = "400";
             this.tbEyeRectX.TextChanged += new System.EventHandler(this.tbEyeRectX_TextChanged);
             this.tbEyeRectX.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbEyeRectX_KeyPress);
             // 
@@ -1132,7 +1132,7 @@
             this.tbEyeSX.Name = "tbEyeSX";
             this.tbEyeSX.Size = new System.Drawing.Size(42, 20);
             this.tbEyeSX.TabIndex = 51;
-            this.tbEyeSX.Text = "350";
+            this.tbEyeSX.Text = "600";
             this.tbEyeSX.TextChanged += new System.EventHandler(this.tbEyeSX_TextChanged);
             this.tbEyeSX.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbEyeSX_KeyPress);
             // 

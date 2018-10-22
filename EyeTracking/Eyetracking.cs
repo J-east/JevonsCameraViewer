@@ -15,10 +15,10 @@ namespace EyeTracking {
         public int yTune = 0;
 
         // primatives because thread safety + laziness
-        public int rectX = 700;
+        public int rectX = 300;
         public int rectY = 130;
-        public int rectHeight = 350;
-        public int rectWidth = 250;
+        public int rectHeight = 800;
+        public int rectWidth = 800;
 
         public bool recordingPoints { get; private set; }
         public bool isActive { get; private set; }

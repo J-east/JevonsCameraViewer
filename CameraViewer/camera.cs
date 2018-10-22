@@ -400,7 +400,7 @@ namespace CameraViewer {
                         g.DrawArc(GPen, new Rectangle(eyeTracker.eyeTrackingMatrix[i, j], new Size(2, 2)), 0, 360);
                 }
 
-                g.DrawRectangle(GPen, eyeTracker.rectX, eyeTracker.rectY, eyeTracker.rectHeight, eyeTracker.rectWidth);
+                g.DrawRectangle(GPen, eyeTracker.rectX, eyeTracker.rectY, eyeTracker.rectWidth, eyeTracker.rectHeight);
 
                 g.Dispose();
 
@@ -441,7 +441,15 @@ namespace CameraViewer {
                 rectPoint.Y += 2;
                 BlackPen = new Pen(Color.DarkOrange, 3);
                 g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(37, 37)), 0, 360);
+
+                g.DrawString($"X:{rectPoint.X} Y:{rectPoint.Y}", new Font("Arial", 16), new SolidBrush(Color.SlateGray), rectPoint);
                 g.Dispose();
+
+                // log the point w/ timestamp
+                try {
+                    FileLogger.FileLogger.AppendToLog($"{DateTime.UtcNow}\tX:{rectPoint.X}\tY:{rectPoint.Y}");
+                }
+                catch { }
             }
 
             return frame;
@@ -493,7 +501,10 @@ namespace CameraViewer {
             }
 
             if (!isEyeCamera && MainForm.EnableProjectionMapping && perspectiveTransformation != null) {
-                frame = perspectiveTransformation.DrawPoints(frame);
+                try {
+                    frame = perspectiveTransformation.DrawPoints(frame);
+                }
+                catch { }
             }
 
             return frame;

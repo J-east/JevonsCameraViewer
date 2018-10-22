@@ -125,11 +125,6 @@ namespace EyeTracking {
             isPoseEstimated = true;
         }
 
-        // during calibration, this function attempts to correct for actual
-        public void MarkPointTransformation() {
-        }
-
-        // is this it?
         private Accord.Point[] PerformProjection(Matrix4x4 transformationMatrix, int viewSize) {
             Accord.Point[] projectedPoints = new Accord.Point[axesModel.Length];
 
