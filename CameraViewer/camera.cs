@@ -43,6 +43,7 @@ namespace CameraViewer {
         public OpticalFlowVariable optiVariables = new OpticalFlowVariable();
 
         public Eyetracking eyeTracker;
+        public PerspectiveTransformation perspectiveTransformation;
 
         public bool isEyeCamera { get; set; } = false;
 
@@ -51,10 +52,11 @@ namespace CameraViewer {
             cameraAdjustments = cameraAdj;
         }
 
-        public Camera(MainForm MainF, CameraAdjustments cameraAdj, Eyetracking eyeTracker) {
+        public Camera(MainForm MainF, CameraAdjustments cameraAdj, Eyetracking eyeTracker, PerspectiveTransformation perspectiveTransformation) {
             MainForm = MainF;
             cameraAdjustments = cameraAdj;
             this.eyeTracker = eyeTracker;
+            this.perspectiveTransformation = perspectiveTransformation;
         }
 
         public bool Active { get; set; }
@@ -241,6 +243,7 @@ namespace CameraViewer {
         DateTime timeStart = DateTime.Now;
         public int currentFramesSecond { get; private set; } = 0;
         public int targetFramesSecond { get; set; } = 25;
+        public bool EnableProjectionMapping { get; internal set; }
 
         public bool processing = false;
         int processingCount = 0;
@@ -322,6 +325,9 @@ namespace CameraViewer {
                 }
             }
 
+            if (!isEyeCamera && MainForm.EnableProjectionMapping) {
+                frame = HandlePoseApproximation(frame);
+            }
             if (eyeTracker.isActive) {
                 frame = HandleEyeTracking(frame);
             }
@@ -377,7 +383,7 @@ namespace CameraViewer {
             // get the current tracking point, notes: this could probably be enhanced with sparse optical flow point tracking
             // if the environment is favorable however, this technique does work extremely well
             if (isEyeCamera) {
-                Tuple<double, double> retVal = FindBlobLocation(frame);
+                Tuple<double, double> retVal = FindEyeBlobLocation(frame);
                 xEyeDetection = retVal.Item1;
                 yEyeDetection = retVal.Item2;
 
@@ -405,7 +411,12 @@ namespace CameraViewer {
                 Pen BlackPen = new Pen(Color.AliceBlue, 2);
                 Graphics g = Graphics.FromImage(frame);
                 System.Drawing.Point calibrationTarget = ScalePoints(eyeTracker.xCal, eyeTracker.yCal, Eyetracking.maxSize, Eyetracking.maxSize);
-                calibrationTarget.X += frame.Height/18;
+
+                if (perspectiveTransformation != null) {
+                    calibrationTarget = perspectiveTransformation.CorrectForHeadMovement(calibrationTarget, true);
+                }
+
+                calibrationTarget.X += frame.Height / 18;
                 calibrationTarget.Y += frame.Height / 18;
                 g.DrawArc(BlackPen, new Rectangle(calibrationTarget, new Size(12, 12)), 0, 360);
                 calibrationTarget.X += 2;
@@ -418,6 +429,9 @@ namespace CameraViewer {
                 Pen BlackPen = new Pen(Color.AliceBlue, 4);
                 Graphics g = Graphics.FromImage(frame);
                 System.Drawing.Point rectPoint = ScalePoints(eyeTracker.TrackedXVal, eyeTracker.TrackedYVal, Eyetracking.maxSize, Eyetracking.maxSize);
+                if (perspectiveTransformation != null) {
+                    rectPoint = perspectiveTransformation.CorrectForHeadMovement(rectPoint, true);
+                }
                 rectPoint.X += frame.Height / 18;
                 rectPoint.Y += frame.Height / 20;
                 rectPoint.Y += eyeTracker.yTune;
@@ -428,6 +442,58 @@ namespace CameraViewer {
                 BlackPen = new Pen(Color.DarkOrange, 3);
                 g.DrawArc(BlackPen, new Rectangle(rectPoint, new Size(37, 37)), 0, 360);
                 g.Dispose();
+            }
+
+            return frame;
+        }
+
+        private Bitmap HandlePoseApproximation(Bitmap frame) {
+            // need to get the points that were tracked, if we don't get exactly 4, then something is bad and we'll bail
+            Tuple<double, double> toRet = new Tuple<double, double>(0, 0);
+
+            // Set up the detector with default parameters.
+            BlobCounter blobCounter = new BlobCounter();
+
+            blobCounter.FilterBlobs = true;
+            blobCounter.MinHeight = 3;
+            blobCounter.MinWidth = 3;
+            blobCounter.MaxHeight = 20;
+            blobCounter.MaxWidth = 20;
+
+            blobCounter.ProcessImage(frame);
+            Rectangle[] rects = blobCounter.GetObjectsRectangles();
+
+            if (rects.ToList().Count == 4) {
+                // need to make sure that the blob locations are in the right order, counterclockwise, should match this:
+                // new Vector3(-100, 100, 0),
+                // new Vector3(100, 100, 0),
+                // new Vector3(100, -100, 0),
+                // new Vector3(-100, -100, 0),
+
+                List<Rectangle> leftRects = rects.OrderBy(a => a.Location.X).Take(2).OrderBy(b => b.Location.Y).ToList();
+                List<Rectangle> rightRects = rects.OrderByDescending(a => a.Location.X).Take(2).OrderBy(b => b.Location.Y).ToList();
+
+                if (perspectiveTransformation == null) {
+                    perspectiveTransformation = new PerspectiveTransformation(new List<Rectangle>() {
+                        leftRects[1],
+                        rightRects[1],
+                        rightRects[0],
+                        leftRects[0]
+                    }.ToArray());
+                }
+
+                perspectiveTransformation.ImagePoints = new List<Rectangle>() {
+                    leftRects[1],
+                    rightRects[1],
+                    rightRects[0],
+                    leftRects[0]
+                }.ToArray();
+
+                perspectiveTransformation.DoPosit();
+            }
+
+            if (!isEyeCamera && MainForm.EnableProjectionMapping && perspectiveTransformation != null) {
+                frame = perspectiveTransformation.DrawPoints(frame);
             }
 
             return frame;
@@ -590,7 +656,7 @@ namespace CameraViewer {
             frame = toColFilter.Apply(frame);
         }
 
-        public Tuple<double, double> FindBlobLocation(Bitmap bmp) {
+        public Tuple<double, double> FindEyeBlobLocation(Bitmap bmp) {
             Tuple<double, double> toRet = new Tuple<double, double>(0, 0);
 
             // Set up the detector with default parameters.
@@ -600,7 +666,7 @@ namespace CameraViewer {
             blobCounter.MinHeight = 5;
             blobCounter.MinWidth = 5;
             blobCounter.MaxHeight = 20;
-            blobCounter.MaxHeight = 20;            
+            blobCounter.MaxWidth = 20;
 
             blobCounter.ProcessImage(bmp);
             Rectangle[] rects = blobCounter.GetObjectsRectangles();
@@ -632,11 +698,11 @@ namespace CameraViewer {
                 filter.Radius = 150;
                 // apply the filter
                 filter.ApplyInPlace(frame);
-                Grayscale toGrFilter = new Grayscale( 0, .9, 0);
+                Grayscale toGrFilter = new Grayscale(0, .9, 0);
                 fr = toGrFilter.Apply(frame);
                 GrayscaleToRGB toColFilter = new GrayscaleToRGB();
                 frame = toColFilter.Apply(fr);
-            }        
+            }
             else if (R && !G && !B) {
                 EuclideanColorFiltering filter = new EuclideanColorFiltering();
                 // set center colol and radius

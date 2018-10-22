@@ -15,6 +15,7 @@ namespace CameraViewer {
     public partial class MainForm : Form {
         Camera Camera1 { get; set; }
         Camera Camera2 { get; set; }
+        public static bool EnableProjectionMapping { get; internal set; }
 
         ContextMenu cm0;
         ContextMenu cm1;
@@ -22,6 +23,8 @@ namespace CameraViewer {
         Size pVideoOriginalSize = new Size(100, 100);
 
         Eyetracking eyeTracker = new Eyetracking();
+        PerspectiveTransformation perspectiveTransformation;
+
         public MainForm() {
             InitializeComponent();
 
@@ -47,13 +50,14 @@ namespace CameraViewer {
 
         // press any key to continue
         private void MainForm_KeyDown(object sender, KeyEventArgs e) {
-            try {
-                eyeTracker.RecordCalibrationPoint();
-                e.Handled = true;
-                cameraAdjustments1.BeginInvoke((MethodInvoker)delegate (){ cameraAdjustments1.UpdateEyeTracking();});
-                cameraAdjustments2.BeginInvoke((MethodInvoker)delegate () { cameraAdjustments2.UpdateEyeTracking(); });
-            }
-            catch { } // do nothing 
+            if (e.KeyCode == Keys.Space)
+                try {
+                    eyeTracker.RecordCalibrationPoint();
+                    e.Handled = true;
+                    cameraAdjustments1.BeginInvoke((MethodInvoker)delegate () { cameraAdjustments1.UpdateEyeTracking(); });
+                    cameraAdjustments2.BeginInvoke((MethodInvoker)delegate () { cameraAdjustments2.UpdateEyeTracking(); });
+                }
+                catch { } // do nothing 
         }
 
         Size cam0OriginalSize;
@@ -89,7 +93,7 @@ namespace CameraViewer {
                 cam0IsFullScreen = true;
                 cm0.MenuItems[0].Text = "Make Normal Size";
                 Camera1.isFullScreenMode = true;
-                Camera1.fullscreenSize = maxSize;                                
+                Camera1.fullscreenSize = maxSize;
             }
         }
 
@@ -131,15 +135,15 @@ namespace CameraViewer {
 
         private void MainForm_Load(object sender, EventArgs e) {
 
-            Camera1 = new Camera(this, cameraAdjustments1, eyeTracker);
-            Camera2 = new Camera(this, cameraAdjustments1, eyeTracker);
+            Camera1 = new Camera(this, cameraAdjustments1, eyeTracker, perspectiveTransformation);
+            Camera2 = new Camera(this, cameraAdjustments2, eyeTracker, perspectiveTransformation);
 
             Camera1.ImageBox = protectedPictureBox0;
             Camera2.ImageBox = protectedPictureBox1;
 
             cameraAdjustments1.InitializeVariables(Camera1, true);
             cameraAdjustments2.InitializeVariables(Camera2, false);
-        }        
+        }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
             System.Windows.Forms.Application.Exit();
@@ -148,7 +152,7 @@ namespace CameraViewer {
         private void protectedPictureBox0_Click(object sender, EventArgs e) {
             try {
                 if (protectedPictureBox0.Image != null && !string.IsNullOrWhiteSpace(Program.Settings.Cam1.SaveLocation)) {
-                    protectedPictureBox0.Image.Save($"{Program.Settings.Cam1.SaveLocation}\\{DateTime.Now.ToString().Replace(" ", String.Empty).Replace(":", String.Empty)}.bmp");                    
+                    protectedPictureBox0.Image.Save($"{Program.Settings.Cam1.SaveLocation}\\{DateTime.Now.ToString().Replace(" ", String.Empty).Replace(":", String.Empty)}.bmp");
                 }
             }
             catch (Exception) {
@@ -170,7 +174,7 @@ namespace CameraViewer {
         }
 
         private void tCPProtocolToolStripMenuItem_Click(object sender, EventArgs e) {
-            TCPSocketForm.TcpSetupForm tcp = new TcpSetupForm();
+            TcpSetupForm tcp = new TcpSetupForm();
             tcp.ShowDialog();
         }
     }

@@ -64,7 +64,6 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.bGoBack = new System.Windows.Forms.Button();
             this.bReset = new System.Windows.Forms.Button();
-            this.cbIsEyeCam = new System.Windows.Forms.CheckBox();
             this.lblInitializeStatus = new System.Windows.Forms.Label();
             this.lblEyeTrackingInfo = new System.Windows.Forms.Label();
             this.bInitialize = new System.Windows.Forms.Button();
@@ -93,7 +92,6 @@
             this.nLineThreashold = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             this.nlineCanny = new System.Windows.Forms.NumericUpDown();
-            this.cbShapeAndLineDetection = new System.Windows.Forms.CheckBox();
             this.cbRectangleTriDetection = new System.Windows.Forms.CheckBox();
             this.cbCircleDetection = new System.Windows.Forms.CheckBox();
             this.cbLineDetection = new System.Windows.Forms.CheckBox();
@@ -600,7 +598,6 @@
             this.panel2.Controls.Add(this.nEyeTrackingTuningX);
             this.panel2.Controls.Add(this.bGoBack);
             this.panel2.Controls.Add(this.bReset);
-            this.panel2.Controls.Add(this.cbIsEyeCam);
             this.panel2.Controls.Add(this.lblInitializeStatus);
             this.panel2.Controls.Add(this.lblEyeTrackingInfo);
             this.panel2.Controls.Add(this.bInitialize);
@@ -629,10 +626,9 @@
             this.panel2.Controls.Add(this.nLineThreashold);
             this.panel2.Controls.Add(this.label9);
             this.panel2.Controls.Add(this.nlineCanny);
-            this.panel2.Controls.Add(this.cbShapeAndLineDetection);
             this.panel2.Controls.Add(this.cbRectangleTriDetection);
             this.panel2.Controls.Add(this.cbCircleDetection);
-            this.panel2.Controls.Add(this.cbLineDetection);
+            this.panel2.Controls.Add(this.cbLineDetection);            
             this.panel2.Location = new System.Drawing.Point(236, 94);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(263, 559);
@@ -693,7 +689,7 @@
             this.cbEyeTracking.Name = "cbEyeTracking";
             this.cbEyeTracking.Size = new System.Drawing.Size(125, 17);
             this.cbEyeTracking.TabIndex = 29;
-            this.cbEyeTracking.Text = "Eye Tracking Enable";
+            this.cbEyeTracking.Text = "Enable Projection Mapping";
             this.cbEyeTracking.UseVisualStyleBackColor = true;
             this.cbEyeTracking.CheckedChanged += new System.EventHandler(this.cbEyeTracking_CheckedChanged);
             //
@@ -1014,16 +1010,7 @@
             0,
             0});
             this.nlineCanny.ValueChanged += new System.EventHandler(this.nlineCanny_ValueChanged);
-            // 
-            // cbShapeAndLineDetection
-            // 
-            this.cbShapeAndLineDetection.AutoSize = true;
-            this.cbShapeAndLineDetection.Location = new System.Drawing.Point(6, 3);
-            this.cbShapeAndLineDetection.Name = "cbShapeAndLineDetection";
-            this.cbShapeAndLineDetection.Size = new System.Drawing.Size(150, 17);
-            this.cbShapeAndLineDetection.TabIndex = 3;
-            this.cbShapeAndLineDetection.Text = "Shape and Line Detection";
-            this.cbShapeAndLineDetection.UseVisualStyleBackColor = true;
+
             // 
             // cbRectangleTriDetection
             // 
@@ -1267,7 +1254,6 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.NumericUpDown nlineCanny;
-        private System.Windows.Forms.CheckBox cbShapeAndLineDetection;
         private System.Windows.Forms.CheckBox cbRectangleTriDetection;
         private System.Windows.Forms.CheckBox cbCircleDetection;
         private System.Windows.Forms.CheckBox cbLineDetection;
@@ -1298,7 +1284,6 @@
         private System.Windows.Forms.Label lblEyetracking;
         private System.Windows.Forms.Label lblEyeTrackingInfo;
         private System.Windows.Forms.Label lblInitializeStatus;
-        private System.Windows.Forms.CheckBox cbIsEyeCam;
         private System.Windows.Forms.Button bGoBack;
         private System.Windows.Forms.Button bReset;
         private System.Windows.Forms.CheckBox cbB;

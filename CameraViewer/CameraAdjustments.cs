@@ -64,7 +64,6 @@ namespace CameraViewer {
                 bReset.Visible = false;
                 lblInitializeStatus.Visible = false;
                 lblEyeTrackingInfo.Visible = false;
-                cbIsEyeCam.Visible = false;
                 bGoBack.Visible = false;
                 lblEyetracking.Visible = false;
             }
@@ -459,17 +458,13 @@ namespace CameraViewer {
         }
 
         private void cbEyeTracking_CheckedChanged(object sender, EventArgs e) {
-
+            MainForm.EnableProjectionMapping = true;
         }
 
         // start the initialization
         private void bInitialize_Click(object sender, EventArgs e) {
             camera.eyeTracker.Initialize();             
-        }
-
-        private void cbIsEyeCam_CheckedChanged(object sender, EventArgs e) {
-            camera.isEyeCamera = cbIsEyeCam.Checked;
-        }
+        }        
 
         private void bReset_Click(object sender, EventArgs e) {
             camera.eyeTracker.Initialize(true);

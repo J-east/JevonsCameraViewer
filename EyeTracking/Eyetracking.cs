@@ -185,12 +185,6 @@ namespace EyeTracking {
             if (yCal > 1) {
                 // determine if the eye tracking point continues in the correct pattern
                 Point detectionPoint = new Point((int)xEyeDetection, (int)yEyeDetection);
-                if (detectionPoint.Y < eyeTrackingMatrix[xCal, yCal - 1].Y) {
-                    return false;
-                }
-                if (xCal != 1 && detectionPoint.X < eyeTrackingMatrix[xCal - 1, yCal].X) {
-                    return false;
-                }
             }
 
             eyeTrackingMatrix[xCal, yCal] = new Point((int)xEyeDetection, (int)yEyeDetection);
