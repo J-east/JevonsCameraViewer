@@ -24,4 +24,6 @@ All nuget packages are uptodate, so building is as easy!
 Notes:
 It is highly advised that you save any work you have open when running this program. Running two usb cameras from the same host controller can cause instability. If you have multiple host controllers, ie a usb 2.0 and usb 3.0, you should plug one camera into the 2.0 and one into the 3.0 for best results.
 
-Running a graphically intense program while running this program is more likely to result in instability, but please feel free to experiment!
+Additionally the cameras used must support the MJPEG format. This information can normally be obtained before purchasing the camera. The c270 is generally adequate for this style of eye tracking and it supports MJPEG. 
+
+Running a graphically intense program while running this program is more likely to result in instability.
